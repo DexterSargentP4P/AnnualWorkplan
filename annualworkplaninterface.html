@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annual Plan Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Custom scrollbar for better aesthetics (optional) */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        /* Dynamically added by JS based on status */
+        .status-on-track-dot { background-color: #22c55e; }
+        .status-at-risk-dot { background-color: #facc15; }
+        .status-off-track-dot { background-color: #ef4444; }
+        .status-completed-dot { background-color: #3b82f6; }
+        .status-not-started-dot { background-color: #9ca3af; }
+
+        .progress-bar-bg {
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 0.375rem; /* rounded-md */
+            height: 1rem; /* h-4 */
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            transition: width 0.3s ease-in-out;
+            text-align: center;
+            color: white;
+            font-size: 0.75rem; /* text-xs */
+            line-height: 1rem; /* leading-4 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Progress bar colors dynamically added by JS */
+         .progress-on-track { background-color: #22c55e; }
+        .progress-at-risk { background-color: #facc15; }
+        .progress-off-track { background-color: #ef4444; }
+        .progress-completed { background-color: #3b82f6; }
+        .progress-not-started { background-color: #9ca3af; }
+
+        .error-message { color: #ef4444; /* red-500 */ font-weight: bold; margin-top: 10px; }
+        .loading-message { color: #6b7280; /* gray-500 */ font-style: italic; margin-top: 10px; }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-2xl font-bold text-gray-700">Annual Plan Dashboard</h1>
+                <nav class="space-x-4">
+                    <a href="#overview" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Overview</a>
+                    <a href="#strategic-goals" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Strategic Goals</a>
+                    <a href="#funder-deliverables" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Funder Deliverables</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+
+        <section id="overview" class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Overall Progress Summary</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-blue-700">Strategic Goals On Track</h3>
+                    <p class="text-3xl font-bold text-blue-600" id="summaryGoalsOnTrack">--/--</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-green-700">Funder Deliverables Met</h3>
+                    <p class="text-3xl font-bold text-green-600" id="summaryDeliverablesMet">--/--</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-yellow-700">Items At Risk</h3>
+                    <p class="text-3xl font-bold text-yellow-600" id="summaryItemsAtRisk">--</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-red-700">Critical Issues (Off Track)</h3>
+                    <p class="text-3xl font-bold text-red-600" id="summaryCriticalIssues">--</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="add-goal-section" class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Strategic Goal</h2>
+            <form id="addGoalForm" class="space-y-4">
+                <div>
+                    <label for="goalTitle" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="goalTitle" name="goalTitle" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="goalDescription" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="goalDescription" name="goalDescription" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                </div>
+                <div>
+                    <label for="goalStatus" class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="goalStatus" name="goalStatus" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option>Not Started</option>
+                        <option>On Track</option>
+                        <option>At Risk</option>
+                        <option>Off Track</option>
+                        <option>Completed</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="goalProgress" class="block text-sm font-medium text-gray-700">Progress (%)</label>
+                    <input type="number" id="goalProgress" name="goalProgress" value="0" min="0" max="100" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-medium text-sm leading-tight uppercase rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">
+                    Add Goal
+                </button>
+            </form>
+        </section>
+
+        <section id="strategic-goals" class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-700 mb-6">Current Strategic Goals</h2>
+            <div id="errorDisplay" class="error-message mb-4"></div>
+            <div id="loadingDisplay" class="loading-message mb-4">Loading goals...</div>
+            <div id="goalsListContainer" class="space-y-6">
+                </div>
+        </section>
+
+        <section id="funder-deliverables" class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Funder Deliverables</h2>
+            <p class="text-gray-600 italic">This section will display funder deliverables. Functionality can be added similar to Strategic Goals.</p>
+            </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center p-4 mt-8">
+        <p>&copy; <span id="currentYear"></span> Your Organization. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // --- Configuration ---
+        const API_BASE_URL = '/api'; // IMPORTANT: Change if your API is hosted elsewhere
+
+        // --- DOM Elements ---
+        const goalsListContainerElement = document.getElementById('goalsListContainer');
+        const addGoalFormElement = document.getElementById('addGoalForm');
+        const errorDisplayElement = document.getElementById('errorDisplay');
+        const loadingDisplayElement = document.getElementById('loadingDisplay');
+        const currentYearElement = document.getElementById('currentYear');
+        // Summary metric elements (optional, can be made dynamic)
+        const summaryGoalsOnTrackEl = document.getElementById('summaryGoalsOnTrack');
+        // ... add other summary elements if you make them dynamic
+
+        // --- Utility Functions ---
+        function displayError(message) {
+            errorDisplayElement.textContent = message;
+            if (message) loadingDisplayElement.textContent = '';
+        }
+
+        function displayLoading(isLoading, section = "goals") { // Default to goals section
+            const targetLoadingElement = section === "goals" ? loadingDisplayElement : null; // Extend for other sections
+            if (targetLoadingElement) {
+                targetLoadingElement.textContent = isLoading ? 'Processing...' : '';
+            }
+            if (isLoading) errorDisplayElement.textContent = '';
+        }
+        
+        function getStatusColorClasses(status) {
+            // Returns Tailwind classes for various parts based on status
+            switch (status) {
+                case 'On Track': return { 
+                    dot: 'status-on-track-dot', 
+                    textBg: 'bg-green-100 text-green-700', 
+                    progress: 'progress-on-track' 
+                };
+                case 'At Risk': return { 
+                    dot: 'status-at-risk-dot', 
+                    textBg: 'bg-yellow-100 text-yellow-700', 
+                    progress: 'progress-at-risk' 
+                };
+                case 'Off Track': return { 
+                    dot: 'status-off-track-dot', 
+                    textBg: 'bg-red-100 text-red-700', 
+                    progress: 'progress-off-track' 
+                };
+                case 'Completed': return { 
+                    dot: 'status-completed-dot', 
+                    textBg: 'bg-blue-100 text-blue-700', 
+                    progress: 'progress-completed' 
+                };
+                default: return { // Not Started or other
+                    dot: 'status-not-started-dot', 
+                    textBg: 'bg-gray-100 text-gray-700', 
+                    progress: 'progress-not-started' 
+                };
+            }
+        }
+
+
+        // --- API Call Functions ---
+        async function getAllGoals() {
+            displayLoading(true, "goals");
+            try {
+                const response = await fetch(`${API_BASE_URL}/goals`);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: `Server error: ${response.statusText}` }));
+                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.message || response.statusText}`);
+                }
+                const goals = await response.json();
+                displayLoading(false, "goals");
+                return goals;
+            } catch (error) {
+                console.error('Failed to fetch goals:', error);
+                displayError(`Error fetching goals: ${error.message}`);
+                displayLoading(false, "goals");
+                return [];
+            }
+        }
+
+        async function addNewGoal(goalData) {
+            displayLoading(true, "goals");
+            try {
+                const response = await fetch(`${API_BASE_URL}/goals`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(goalData),
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: `Server error: ${response.statusText}` }));
+                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.message || response.statusText}`);
+                }
+                const savedGoal = await response.json();
+                displayLoading(false, "goals");
+                return savedGoal;
+            } catch (error) {
+                console.error('Failed to add new goal:', error);
+                displayError(`Error adding goal: ${error.message}`);
+                displayLoading(false, "goals");
+                return null;
+            }
+        }
+
+        async function deleteGoalById(goalId) {
+            if (!confirm(`Are you sure you want to delete this strategic goal?`)) {
+                return false;
+            }
+            displayLoading(true, "goals");
+            try {
+                const response = await fetch(`${API_BASE_URL}/goals/${goalId}`, {
+                    method: 'DELETE',
+                });
+                if (!response.ok) {
+                    let errorMessage = `Server error: ${response.statusText}`;
+                    try { const errorData = await response.json(); errorMessage = errorData.message || errorMessage; }
+                    catch (e) { /* Ignore if response body is not JSON */ }
+                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
+                }
+                displayLoading(false, "goals");
+                return true;
+            } catch (error) {
+                console.error(`Failed to delete goal ${goalId}:`, error);
+                displayError(`Error deleting goal: ${error.message}`);
+                displayLoading(false, "goals");
+                return false;
+            }
+        }
+
+        // --- UI Rendering Functions ---
+        function renderGoals(goals) {
+            goalsListContainerElement.innerHTML = ''; // Clear existing goals
+             // Hide loading message once rendering starts (or if no goals)
+            if (loadingDisplayElement) loadingDisplayElement.textContent = '';
+
+
+            if (!goals || goals.length === 0) {
+                goalsListContainerElement.innerHTML = '<p class="text-gray-500 italic">No strategic goals found. Add one using the form above.</p>';
+                return;
+            }
+
+            goals.forEach(goal => {
+                const colorInfo = getStatusColorClasses(goal.status || "Not Started");
+                const goalCardHTML = `
+                    <div class="bg-gray-50 p-5 rounded-lg shadow-md border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-lg font-semibold text-gray-800">${goal.title || 'No Title'}</h3>
+                            <span class="flex items-center text-sm font-medium px-3 py-1 rounded-full ${colorInfo.textBg}">
+                                <span class="status-indicator ${colorInfo.dot} mr-1.5"></span>
+                                ${goal.status || 'N/A'}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">${goal.description || 'No description.'}</p>
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm text-gray-500 mb-1">
+                                <span>Progress</span>
+                                <span>${goal.progress || 0}%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar ${colorInfo.progress}" style="width: ${goal.progress || 0}%;">${(goal.progress || 0) > 10 ? (goal.progress || 0) + '%' : ''}</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-2 justify-end">
+                            <button class="delete-goal-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-1 px-3 rounded-md transition" data-id="${goal.id}">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                goalsListContainerElement.innerHTML += goalCardHTML;
+            });
+
+            // Add event listeners to the new delete buttons
+            document.querySelectorAll('.delete-goal-btn').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const goalId = event.target.dataset.id;
+                    const success = await deleteGoalById(goalId);
+                    if (success) {
+                        loadAndRenderGoals(); // Refresh the list
+                    }
+                });
+            });
+        }
+        
+        // --- Update Summary Metrics (Placeholder - make dynamic if API supports) ---
+        function updateSummaryMetrics(goals, deliverables) {
+            // This is a placeholder. For dynamic updates, you'd need to fetch summary data
+            // or calculate it from the full 'goals' and 'deliverables' arrays.
+            // For now, we'll just show how it *could* be updated if we had the data.
+            if (goals && summaryGoalsOnTrackEl) {
+                 const goalsOnTrackCount = goals.filter(g => g.status === 'On Track').length;
+                 summaryGoalsOnTrackEl.textContent = `${goalsOnTrackCount}/${goals.length}`;
+            }
+             // Similar logic for other summary items if data is available
+        }
+
+
+        // --- Event Handlers ---
+        addGoalFormElement.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            displayError('');
+
+            const title = document.getElementById('goalTitle').value;
+            const description = document.getElementById('goalDescription').value;
+            const status = document.getElementById('goalStatus').value;
+            const progress = parseInt(document.getElementById('goalProgress').value);
+
+            if (!title.trim()) { // Simplified validation
+                displayError('Title is required.');
+                return;
+            }
+
+            const newGoalData = { title, description, status, progress };
+            const savedGoal = await addNewGoal(newGoalData);
+
+            if (savedGoal) {
+                addGoalFormElement.reset();
+                loadAndRenderGoals();
+            }
+        });
+
+        // --- Initial Load ---
+        async function loadAndRenderGoals() {
+            displayLoading(true, "goals"); // Show loading message for goals section
+            const goals = await getAllGoals();
+            renderGoals(goals);
+            updateSummaryMetrics(goals, []); // Pass empty deliverables for now
+            displayLoading(false, "goals"); // Hide loading message
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if(currentYearElement) currentYearElement.textContent = new Date().getFullYear();
+            loadAndRenderGoals();
+        });
+
+    </script>
+</body>
+</html>
+
