@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Annual Plan Dashboard - Funder Deliverables & Gantt</title>
+    <title>Annual Plan Dashboard - Hierarchical Funder Gantt</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
     <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
@@ -47,10 +47,10 @@
         .gantt-container .grid-background { fill: #f9fafb; } .gantt-container .grid-header { fill: #f3f4f6; }
         .gantt-container .grid-row { fill: #ffffff; } .gantt-container .grid-row:nth-child(even) { fill: #f9fafb; }
         .gantt-container .bar-label { fill: #374151; font-size: 12px; cursor: default; } 
-        .gantt-container .bar-label.objective-task-label { font-weight: bold; cursor: pointer !important; } 
+        .gantt-container .bar-label.objective-task-label, .gantt-container .bar-label.funder-task-label { font-weight: bold; cursor: pointer !important; } 
         .gantt-container .bar-progress { fill-opacity: 0.7; } 
         .gantt-container .bar-wrapper .bar { fill-opacity: 0.3; stroke-width: 0; }
-        .gantt-container .objective-task-label .bar { cursor: pointer !important; }
+        .gantt-container .objective-task-label .bar, .gantt-container .funder-task-label .bar { cursor: pointer !important; }
         .gantt-container .handle { fill: #e5e7eb; stroke: #9ca3af; }
         .view-hidden { display: none !important; }
 
@@ -65,14 +65,8 @@
         .view-switch-btn.active-view { color: #2563eb; border-bottom: 2px solid #2563eb; font-weight: 600; }
         .legend-item { display: flex; align-items: center; margin-bottom: 0.5rem; font-size: 0.875rem; }
         .legend-color-swatch { width: 1rem; height: 1rem; margin-right: 0.5rem; border-radius: 0.125rem; border: 1px solid #ccc; }
-        #ganttObjectiveLegendContainer { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
+        #ganttCombinedLegendContainer { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
         #planObjectiveLegendContainer { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; background-color: #fff; padding:1rem; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
-        
-        /* Gantt Deliverable Separator Bar */
-        .gantt .gantt-deliverable-separator .bar { fill: #4b5563 !important; /* gray-600 */ fill-opacity: 1 !important; }
-        .gantt .gantt-deliverable-separator .bar-label { fill: #ffffff !important; font-weight: bold; }
-        .gantt .gantt-funder-deliverable .bar { fill: #0d9488 !important; /* teal-600 */ fill-opacity: 0.3 !important; }
-        .gantt .gantt-funder-deliverable .bar-progress { fill: #0d9488 !important; fill-opacity: 0.7 !important; }
     </style>
 </head>
 <body class="antialiased text-gray-800">
@@ -134,8 +128,8 @@
 
         <section id="gantt-view" class="view-section view-hidden bg-white p-6 rounded-lg shadow-lg">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Gantt Chart View</h2>
-            <p class="text-sm text-gray-500 mb-4">Visual timeline of plan items & deliverables. Click on an Objective bar to expand/collapse. Items must have a timeline (quarter) assigned.</p>
-            <div id="ganttObjectiveLegendContainer" class="mb-4">
+            <p class="text-sm text-gray-500 mb-4">Visual timeline of plan items & deliverables. Click on an Objective or Funder bar to expand/collapse. Items must have a timeline (quarter) assigned.</p>
+            <div id="ganttCombinedLegendContainer" class="mb-4"> 
                  <h4 class="text-sm font-semibold text-gray-600 mb-2">Legend (Gantt View):</h4>
                  <div id="ganttCombinedLegend" class="flex flex-wrap gap-x-4 gap-y-2"></div>
             </div>
@@ -154,8 +148,10 @@
                             <input type="text" id="deliverableTitle" name="deliverableTitle" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         </div>
                         <div>
-                            <label for="deliverableFunder" class="block text-sm font-medium text-gray-700">Funder:</label>
-                            <input type="text" id="deliverableFunder" name="deliverableFunder" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <label for="deliverableFunderSelect" class="block text-sm font-medium text-gray-700">Funder:</label>
+                            <select id="deliverableFunderSelect" name="deliverableFunderSelect" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </select>
+                            <input type="text" id="newDeliverableFunder" name="newDeliverableFunder" placeholder="Enter new funder name" class="mt-2 hidden block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         </div>
                     </div>
                     <div>
@@ -165,8 +161,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label for="deliverableTimelineQuarter" class="block text-sm font-medium text-gray-700">Due (Quarter):</label>
-                            <select id="deliverableTimelineQuarter" name="deliverableTimelineQuarter" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                </select>
+                            <select id="deliverableTimelineQuarter" name="deliverableTimelineQuarter" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></select>
                         </div>
                         <div>
                             <label for="deliverableStatus" class="block text-sm font-medium text-gray-700">Status:</label>
@@ -191,8 +186,7 @@
             </div>
             <div id="errorDisplayDeliverables" class="error-message"></div>
             <div id="loadingDisplayDeliverables" class="loading-message">Loading funder deliverables...</div>
-            <div id="funderDeliverablesTableContainer" class="overflow-x-auto">
-                </div>
+            <div id="funderDeliverablesTableContainer" class="overflow-x-auto"></div>
         </section>
     </main>
 
@@ -223,7 +217,9 @@
             { id: 'fd_ktt_module1', title: 'Mental Health Resources Module', funder: 'KTT Initiative', project: 'REAL Xchange Content', timeline: 'Q3 2025', status: 'On Track', responsible: 'CLEC', notes: 'Develop, release, and promote.'},
             { id: 'fd_ktt_webcast1', title: 'Webcast on Journey to Belonging Updates', funder: 'KTT Initiative', project: 'REAL Xchange Promotion', timeline: 'Q4 2025', status: 'Not Started', responsible: 'P4P', notes: 'In partnership with MCCSS.'},
             { id: 'fd_esdc_report_q1', title: 'ESDC Q1 Progress Report', funder: 'ESDC', project: 'National Facilitator Collaborative', timeline: 'Q1 2025', status: 'Submitted', responsible: 'National Coordinator', notes: 'Covering Jan-Mar activities.'},
-            { id: 'fd_esdc_report_q2', title: 'ESDC Q2 Financial Statement', funder: 'ESDC', project: 'National Facilitator Collaborative', timeline: 'Q2 2025', status: 'Not Started', responsible: 'Finance Dept', notes: 'Detailed financial expenditure.'}
+            { id: 'fd_esdc_report_q2', title: 'ESDC Q2 Financial Statement', funder: 'ESDC', project: 'National Facilitator Collaborative', timeline: 'Q2 2025', status: 'Not Started', responsible: 'Finance Dept', notes: 'Detailed financial expenditure.'},
+            { id: 'fd_lfo_workshop', title: 'Facilitator Training Workshop Development', funder: 'Law Foundation of Ontario', project: 'Safe & Secure Evergreen', timeline: 'Q2 2025', status: 'Not Started', responsible: 'Emily B.', notes: 'Workshop materials and guidebook.'},
+            { id: 'fd_ktt_referral', title: 'Member Referral Incentive Program Launch', funder: 'KTT Initiative', project: 'REAL Xchange Membership', timeline: 'Q1 2026', status: 'Not Started', responsible: 'CLEC', notes: 'Encourage existing users to invite colleagues.'}
         ];
 
         let ganttChart = null;
@@ -241,9 +237,14 @@
             { planClass: 'border-fuchsia-500', ganttFill: '#D946EF' }, { planClass: 'border-pink-500', ganttFill: '#EC4899' },
             { planClass: 'border-rose-500', ganttFill: '#F43F5E' }
         ];
-        const funderDeliverableGanttColor = { planClass: 'border-slate-500', ganttFill: '#64748B' }; // Slate for deliverables
-        let colorIndex = 0;
+        let funderColors = {}; 
+        const predefinedFunderGanttColors = [ 
+            '#4F46E5', '#0D9488', '#DB2777', '#7C3AED', '#CA8A04', '#DC2626', '#EA580C'
+        ];
+        let objectiveColorIndex = 0;
+        let funderColorIndex = 0;
         let expandedObjectives = {}; 
+        let expandedFunders = {}; 
 
         const planListContainerElement = document.getElementById('planListContainer');
         const addPlanFormElement = document.getElementById('addPlanForm');
@@ -264,14 +265,15 @@
         const viewSwitchButtons = document.querySelectorAll('.view-switch-btn');
         const viewSections = document.querySelectorAll('.view-section');
         const planObjectiveLegendElement = document.getElementById('planObjectiveLegend');
-        const ganttCombinedLegendElement = document.getElementById('ganttCombinedLegend'); // Updated ID for combined legend
+        const ganttCombinedLegendElement = document.getElementById('ganttCombinedLegend');
 
         const addDeliverableFormElement = document.getElementById('addDeliverableForm');
         const funderDeliverablesTableContainerElement = document.getElementById('funderDeliverablesTableContainer');
         const errorDisplayDeliverablesElement = document.getElementById('errorDisplayDeliverables');
         const loadingDisplayDeliverablesElement = document.getElementById('loadingDisplayDeliverables');
         const deliverableTimelineQuarterElement = document.getElementById('deliverableTimelineQuarter');
-
+        const deliverableFunderSelectElement = document.getElementById('deliverableFunderSelect');
+        const newDeliverableFunderInputElement = document.getElementById('newDeliverableFunder');
 
         function displayMessage(element, message, type = 'info') {
             if (!element) return;
@@ -412,12 +414,24 @@
         
         function assignObjectiveColors() {
             objectiveColors = {}; 
-            colorIndex = 0;
+            objectiveColorIndex = 0; 
             const objectives = [...new Set(strategicPlanData.map(item => item.objective).filter(Boolean))];
             objectives.forEach(objective => {
                 if (!objectiveColors[objective]) {
-                    objectiveColors[objective] = predefinedColorClasses[colorIndex % predefinedColorClasses.length];
-                    colorIndex++;
+                    objectiveColors[objective] = predefinedColorClasses[objectiveColorIndex % predefinedColorClasses.length];
+                    objectiveColorIndex++;
+                }
+            });
+        }
+        
+        function assignFunderColors() {
+            funderColors = {};
+            funderColorIndex = 0;
+            const funders = [...new Set(funderDeliverablesData.map(item => item.funder).filter(Boolean))];
+            funders.forEach(funder => {
+                if (!funderColors[funder]) {
+                    funderColors[funder] = predefinedFunderGanttColors[funderColorIndex % predefinedFunderGanttColors.length];
+                    funderColorIndex++;
                 }
             });
         }
@@ -494,41 +508,47 @@
         
         function renderObjectiveLegend(legendElement) {
             legendElement.innerHTML = '';
-            if (Object.keys(objectiveColors).length === 0 && legendElement.id !== 'ganttCombinedLegend') { // Don't show if no objectives for plan view
-                 legendElement.innerHTML = '<p class="text-xs text-gray-500">No objectives with assigned colors yet.</p>';
-                 return;
-            }
+            const objectivesInPlan = [...new Set(strategicPlanData.map(item => item.objective).filter(Boolean))];
             
-            // For combined Gantt legend
             if (legendElement.id === 'ganttCombinedLegend') {
-                // Add Objective Colors
-                for (const objectiveName in objectiveColors) {
+                objectivesInPlan.forEach(objectiveName => {
                     const colorInfo = objectiveColors[objectiveName];
-                    const swatchColor = colorInfo.ganttFill;
-                    const legendItem = document.createElement('div');
+                    if (colorInfo) {
+                        const swatchColor = colorInfo.ganttFill;
+                        const legendItem = document.createElement('div');
+                        legendItem.className = 'legend-item';
+                        legendItem.innerHTML = `<span class="legend-color-swatch" style="background-color: ${swatchColor};"></span><span>${objectiveName} (Objective)</span>`;
+                        legendElement.appendChild(legendItem);
+                    }
+                });
+                const fundersInDeliverables = [...new Set(funderDeliverablesData.map(item => item.funder).filter(Boolean))];
+                fundersInDeliverables.forEach(funderName => {
+                    const colorHex = funderColors[funderName] || predefinedFunderGanttColors[0]; 
+                     const legendItem = document.createElement('div');
                     legendItem.className = 'legend-item';
-                    legendItem.innerHTML = `<span class="legend-color-swatch" style="background-color: ${swatchColor};"></span><span>${objectiveName} (Objective)</span>`;
+                    legendItem.innerHTML = `<span class="legend-color-swatch" style="background-color: ${colorHex};"></span><span>${funderName} (Deliverables)</span>`;
                     legendElement.appendChild(legendItem);
-                }
-                // Add Funder Deliverable Color
-                const deliverableLegendItem = document.createElement('div');
-                deliverableLegendItem.className = 'legend-item';
-                deliverableLegendItem.innerHTML = `<span class="legend-color-swatch" style="background-color: ${funderDeliverableGanttColor.ganttFill};"></span><span>Funder Deliverable</span>`;
-                legendElement.appendChild(deliverableLegendItem);
+                });
 
-                if (Object.keys(objectiveColors).length === 0 && funderDeliverablesData.filter(d => d.timeline).length === 0) {
+                if (objectivesInPlan.length === 0 && fundersInDeliverables.length === 0) {
                     legendElement.innerHTML = '<p class="text-xs text-gray-500">No items with assigned colors for Gantt legend.</p>';
                 }
 
-            } else { // For Plan View Legend (only objectives)
-                 for (const objectiveName in objectiveColors) {
+            } else { 
+                 if (objectivesInPlan.length === 0) {
+                    legendElement.innerHTML = '<p class="text-xs text-gray-500">No objectives with assigned colors yet.</p>';
+                    return;
+                 }
+                 objectivesInPlan.forEach(objectiveName => {
                     const colorInfo = objectiveColors[objectiveName];
-                    const swatchColorClass = colorInfo.planClass.replace('border-','bg-');
-                    const legendItem = document.createElement('div');
-                    legendItem.className = 'legend-item';
-                    legendItem.innerHTML = `<span class="legend-color-swatch ${swatchColorClass}"></span><span>${objectiveName}</span>`;
-                    legendElement.appendChild(legendItem);
-                }
+                    if (colorInfo) {
+                        const swatchColorClass = colorInfo.planClass.replace('border-','bg-');
+                        const legendItem = document.createElement('div');
+                        legendItem.className = 'legend-item';
+                        legendItem.innerHTML = `<span class="legend-color-swatch ${swatchColorClass}"></span><span>${objectiveName}</span>`;
+                        legendElement.appendChild(legendItem);
+                    }
+                });
             }
         }
         
@@ -536,6 +556,7 @@
             displayMessage(ganttErrorDisplayElement, '', 'info'); 
             ganttSvgElement.innerHTML = ''; 
             assignObjectiveColors(); 
+            assignFunderColors();
 
             let tasksForGantt = [];
             const uniqueObjectives = [...new Set(strategicPlanData.map(item => item.objective).filter(Boolean))];
@@ -580,44 +601,71 @@
                     });
                 }
             });
-
-            // Add Funder Deliverables Separator and Tasks
-            if (funderDeliverablesData.some(d => d.timeline)) {
+            
+            const hasDeliverablesWithTimeline = funderDeliverablesData.some(d => d.timeline && getDatesFromQuarter(d.timeline).start);
+            if (hasDeliverablesWithTimeline && (strategicPlanData.length > 0 || funderDeliverablesData.length > 0) ) {
                  tasksForGantt.push({
-                    id: 'FUNDER_DELIVERABLES_SEPARATOR',
+                    id: 'FUNDER_DELIVERABLES_SEPARATOR_ID', 
                     name: '--- FUNDER DELIVERABLES ---',
-                    start: `${new Date().getFullYear()}-01-01`, // Spans current year by default
+                    start: `${new Date().getFullYear()}-01-01`, 
                     end: `${new Date().getFullYear()}-12-31`,
-                    progress: 0,
-                    custom_class: 'gantt-deliverable-separator',
-                    isSeparator: true // Custom flag
-                });
-
-                funderDeliverablesData.forEach(deliverable => {
-                    const dates = getDatesFromQuarter(deliverable.timeline);
-                    if (dates.start && dates.end) {
-                        tasksForGantt.push({
-                            id: `DELIVERABLE_${deliverable.id}`,
-                            name: deliverable.title,
-                            start: dates.start,
-                            end: dates.end,
-                            progress: (deliverable.status || '').toLowerCase().includes('completed') || (deliverable.status || '').toLowerCase().includes('approved') ? 100 : 0, // Simple progress for deliverables
-                            custom_class: 'gantt-funder-deliverable' // Specific class for deliverable bars
-                        });
-                    }
+                    progress: 0, 
+                    custom_class: 'gantt-deliverable-separator', 
+                    isSeparator: true 
                 });
             }
 
+            const uniqueFunders = [...new Set(funderDeliverablesData.map(item => item.funder).filter(Boolean))];
+            uniqueFunders.forEach(funderName => {
+                const funderColorHex = funderColors[funderName] || predefinedFunderGanttColors[0];
+                const funderColorClassName = `gantt-funder-color-${Object.keys(funderColors).indexOf(funderName)}`;
+                const isFunderExpanded = expandedFunders[funderName] === true;
 
-            if (tasksForGantt.length === 0) { // If no objectives and no deliverables with timeline
+                let funderYear = new Date().getFullYear();
+                const deliverablesForFunder = funderDeliverablesData.filter(d => d.funder === funderName && d.timeline);
+                if (deliverablesForFunder.length > 0) {
+                    const years = deliverablesForFunder.map(d => parseInt(d.timeline.split(' ')[1]));
+                    if (years.length > 0 && !years.some(isNaN)) funderYear = Math.min(...years);
+                }
+
+                tasksForGantt.push({
+                    id: `FUNDER_${funderName.replace(/\s+/g, '_')}`,
+                    name: (isFunderExpanded ? '▼ ' : '► ') + funderName, 
+                    start: `${funderYear}-01-01`,
+                    end: `${funderYear}-12-31`,
+                    progress: 0, 
+                    custom_class: `${funderColorClassName} funder-task-label`, 
+                    isFunderGroup: true,
+                    funderName: funderName
+                });
+
+                if (isFunderExpanded) {
+                    deliverablesForFunder.forEach(deliverable => {
+                        const dates = getDatesFromQuarter(deliverable.timeline);
+                        if (dates.start && dates.end) {
+                            tasksForGantt.push({
+                                id: `DELIVERABLE_${deliverable.id}`,
+                                name: `    ${deliverable.title}`,
+                                start: dates.start,
+                                end: dates.end,
+                                progress: (deliverable.status || '').toLowerCase().includes('completed') || (deliverable.status || '').toLowerCase().includes('approved') ? 100 : 0,
+                                dependencies: `FUNDER_${funderName.replace(/\s+/g, '_')}`,
+                                custom_class: funderColorClassName 
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (tasksForGantt.length === 0 ) { 
                  displayMessage(ganttErrorDisplayElement, 'No items with valid timelines to display in Gantt chart.', 'info');
             }
             
-            renderObjectiveLegend(ganttCombinedLegendElement); // Render combined legend
+            renderObjectiveLegend(ganttCombinedLegendElement); 
 
-            if (tasksForGantt.length === 0) return; // Exit if nothing to draw
+            if (tasksForGantt.length === 0) return; 
 
-            const styleId = 'gantt-dynamic-objective-styles';
+            const styleId = 'gantt-dynamic-styles'; 
             let dynamicStyles = document.getElementById(styleId);
             if (!dynamicStyles) {
                 dynamicStyles = document.createElement('style');
@@ -632,6 +680,13 @@
                 cssRules += `.gantt .${className} .bar-progress { fill: ${colorHex} !important; fill-opacity: 0.7 !important; } `;
                 cssRules += `.gantt .${className}:not(.objective-task-label) .bar { fill: ${colorHex} !important; fill-opacity: 0.3 !important; } `;
             });
+            Object.keys(funderColors).forEach((funder, index) => {
+                const colorHex = funderColors[funder];
+                const className = `gantt-funder-color-${index}`;
+                cssRules += `.gantt .${className}.funder-task-label .bar { cursor: pointer !important; fill: ${colorHex} !important; fill-opacity: 0.3 !important; } `;
+                cssRules += `.gantt .${className} .bar-progress { fill: ${colorHex} !important; fill-opacity: 0.7 !important; } `; 
+                cssRules += `.gantt .${className}:not(.funder-task-label) .bar { fill: ${colorHex} !important; fill-opacity: 0.3 !important; } `;
+            });
             dynamicStyles.innerHTML = cssRules;
 
             try {
@@ -644,20 +699,33 @@
                         if (task.isObjective) { 
                             expandedObjectives[task.objectiveName] = !expandedObjectives[task.objectiveName];
                             renderGanttChart(); 
+                        } else if (task.isFunderGroup) {
+                            expandedFunders[task.funderName] = !expandedFunders[task.funderName];
+                            renderGanttChart();
+                        } else if (task.isSeparator) {
+                            return;
                         }
                     },
                     custom_popup_html: function(task) {
-                        const planItem = strategicPlanData.find(p => String(p.id) === task.id || `OBJECTIVE_${p.objective.replace(/\s+/g, '_')}` === task.id);
-                        const deliverableItem = funderDeliverablesData.find(d => `DELIVERABLE_${d.id}` === task.id);
+                        if (task.isSeparator) return ''; 
 
+                        const planItem = strategicPlanData.find(p => String(p.id) === task.id || `OBJECTIVE_${p.objective.replace(/\s+/g, '_')}` === task.id);
+                        const deliverableItem = funderDeliverablesData.find(d => `DELIVERABLE_${d.id}` === task.id || `FUNDER_${d.funder.replace(/\s+/g, '_')}` === task.id );
+                        
                         if (task.isObjective) {
                              return `
                             <div class="gantt-popup-content p-3 shadow-xl rounded-md bg-white text-sm max-w-xs">
-                                <div class="font-bold text-gray-800 mb-1.5">${task.name.replace(/^[▼►]\s*/, '')}</div>
+                                <div class="font-bold text-gray-800 mb-1.5">${task.name.replace(/^[▼►]\s*/, '')} (Objective)</div>
                                 <div class="text-xs text-gray-500">Progress: ${task.progress}%</div>
                                 <div class="text-xs text-gray-500 mt-1">Click to expand/collapse strategies.</div>
                             </div>`;
-                        } else if (deliverableItem) {
+                        } else if (task.isFunderGroup) {
+                             return `
+                            <div class="gantt-popup-content p-3 shadow-xl rounded-md bg-white text-sm max-w-xs">
+                                <div class="font-bold text-gray-800 mb-1.5">${task.name.replace(/^[▼►]\s*/, '')}</div>
+                                <div class="text-xs text-gray-500 mt-1">Click to expand/collapse deliverables.</div>
+                            </div>`;
+                        } else if (deliverableItem && task.id.startsWith('DELIVERABLE_')) { 
                              return `
                             <div class="gantt-popup-content p-3 shadow-xl rounded-md bg-white text-sm max-w-xs">
                                 <div class="font-bold text-gray-800 mb-1.5">${deliverableItem.title}</div>
@@ -668,7 +736,6 @@
                                 ${deliverableItem.responsible ? `<div class="text-xs text-gray-500">Responsible: ${deliverableItem.responsible}</div>` : ''}
                             </div>`;
                         }
-                        // For strategic plan items (strategies/activities)
                         return `
                             <div class="gantt-popup-content p-3 shadow-xl rounded-md bg-white text-sm max-w-xs">
                                 <div class="font-bold text-gray-800 mb-1.5">${planItem ? planItem.title : task.name.trim()}</div>
@@ -693,11 +760,9 @@
             const planItemsOffTrack = strategicPlanData.filter(g => (g.status || '').toLowerCase().includes('off track')).length;
             const planItemsCompleted = strategicPlanData.filter(g => (g.status || '').toLowerCase().includes('completed')).length;
             
-            // Consider deliverables in summary too
             const deliverablesAtRisk = funderDeliverablesData.filter(d => (d.status || '').toLowerCase().includes('at risk') || (d.status || '').toLowerCase().includes('overdue')).length;
-            const deliverablesOffTrack = funderDeliverablesData.filter(d => (d.status || '').toLowerCase().includes('off track')).length; // Assuming 'Off Track' is a possible deliverable status
+            const deliverablesOffTrack = funderDeliverablesData.filter(d => (d.status || '').toLowerCase().includes('off track')).length; 
             const deliverablesCompleted = funderDeliverablesData.filter(d => (d.status || '').toLowerCase().includes('completed') || (d.status || '').toLowerCase().includes('approved')).length;
-
 
             summaryGoalsOnTrackEl.textContent = `${planItemsOnTrack}/${strategicPlanData.length || 0}`;
             summaryItemsAtRiskEl.textContent = `${planItemsAtRisk + deliverablesAtRisk}`;
@@ -829,7 +894,6 @@
             }
         }
 
-        // --- Funder Deliverables Functions ---
         function renderFunderDeliverables() {
             displayMessage(loadingDisplayDeliverablesElement, '', 'info');
             funderDeliverablesTableContainerElement.innerHTML = '';
@@ -839,12 +903,9 @@
                 return;
             }
 
-            // Group by funder
             const groupedByFunder = funderDeliverablesData.reduce((acc, item) => {
                 const funderName = item.funder || 'Unspecified Funder';
-                if (!acc[funderName]) {
-                    acc[funderName] = [];
-                }
+                if (!acc[funderName]) acc[funderName] = [];
                 acc[funderName].push(item);
                 return acc;
             }, {});
@@ -866,7 +927,6 @@
             `;
 
             for (const funderName in groupedByFunder) {
-                // Funder Header Row
                 tableHTML += `
                     <tr class="bg-gray-100">
                         <td colspan="7" class="px-6 py-3 text-left text-sm font-semibold text-gray-700">${funderName}</td>
@@ -905,13 +965,25 @@
         addDeliverableFormElement.addEventListener('submit', (event) => {
             event.preventDefault();
             displayMessage(errorDisplayDeliverablesElement, '', 'info');
+            
+            let funderName = deliverableFunderSelectElement.value;
+            if (funderName === '_addNewFunder') {
+                funderName = newDeliverableFunderInputElement.value.trim();
+                if (!funderName) {
+                    displayMessage(errorDisplayDeliverablesElement, 'New Funder Name is required if selected.', 'error');
+                    return;
+                }
+            } else if (!funderName) {
+                 displayMessage(errorDisplayDeliverablesElement, 'Funder selection is required.', 'error');
+                 return;
+            }
 
             const newDeliverable = {
                 id: `fd-manual-${Date.now()}`,
                 title: document.getElementById('deliverableTitle').value.trim(),
-                funder: document.getElementById('deliverableFunder').value.trim(),
+                funder: funderName,
                 project: document.getElementById('deliverableProject').value.trim(),
-                timeline: document.getElementById('deliverableTimelineQuarter').value, // Changed from dueDate
+                timeline: document.getElementById('deliverableTimelineQuarter').value, 
                 status: document.getElementById('deliverableStatus').value,
                 responsible: document.getElementById('deliverableResponsible').value.trim(),
                 notes: document.getElementById('deliverableNotes').value.trim()
@@ -923,37 +995,64 @@
             }
             if (!newDeliverable.timeline) {
                 displayMessage(errorDisplayDeliverablesElement, 'Due (Quarter) is required for Gantt chart visualization.', 'error');
-                // Allow adding, but it won't show on Gantt without a timeline
             }
-
 
             funderDeliverablesData.push(newDeliverable);
             renderFunderDeliverables();
+            populateFunderDropdown(); 
             updateSummaryMetrics();
             if (!document.getElementById('gantt-view').classList.contains('view-hidden')) {
-                renderGanttChart(); // Update Gantt if visible
+                renderGanttChart(); 
             }
             addDeliverableFormElement.reset();
+            newDeliverableFunderInputElement.classList.add('hidden'); 
+            newDeliverableFunderInputElement.value = '';
+            deliverableFunderSelectElement.value = ''; 
             displayMessage(loadingDisplayDeliverablesElement, 'Funder deliverable added to current session.', 'info');
         });
 
         function deleteFunderDeliverableFromMemory(deliverableId) {
-            if (confirm('Are you sure you want to delete this funder deliverable from the current view? This change is temporary.')) {
+            if (confirm(`Are you sure you want to delete this funder deliverable from the current view? This change is temporary.`)) {
                 funderDeliverablesData = funderDeliverablesData.filter(item => item.id !== deliverableId);
                 renderFunderDeliverables();
+                populateFunderDropdown(); 
                 updateSummaryMetrics();
                 if (!document.getElementById('gantt-view').classList.contains('view-hidden')) {
-                    renderGanttChart(); // Update Gantt if visible
+                    renderGanttChart(); 
                 }
             }
         }
 
+        function populateFunderDropdown() {
+            const uniqueFunders = [...new Set(funderDeliverablesData.map(item => item.funder).filter(Boolean))];
+            deliverableFunderSelectElement.innerHTML = '<option value="">Select Existing Funder</option>';
+            uniqueFunders.sort().forEach(funder => { 
+                const option = document.createElement('option');
+                option.value = funder;
+                option.textContent = funder;
+                deliverableFunderSelectElement.appendChild(option);
+            });
+            const addNewOption = document.createElement('option');
+            addNewOption.value = "_addNewFunder";
+            addNewOption.textContent = "[Add New Funder...]";
+            deliverableFunderSelectElement.appendChild(addNewOption);
+        }
 
-        // --- Initial Load & Setup ---
+        deliverableFunderSelectElement.addEventListener('change', function() {
+            if (this.value === '_addNewFunder') {
+                newDeliverableFunderInputElement.classList.remove('hidden');
+                newDeliverableFunderInputElement.focus();
+            } else {
+                newDeliverableFunderInputElement.classList.add('hidden');
+                newDeliverableFunderInputElement.value = '';
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             if(currentYearElement) currentYearElement.textContent = new Date().getFullYear();
             objectivesContainerElement.appendChild(createObjectiveElement()); 
-            populateTimelineDropdown(document.getElementById('deliverableTimelineQuarter')); // Populate deliverable timeline
+            populateTimelineDropdown(document.getElementById('deliverableTimelineQuarter')); 
+            populateFunderDropdown();
 
             const planViewLoadingText = document.getElementById('loadingDisplayPlan');
             if(planViewLoadingText) planViewLoadingText.textContent = strategicPlanData.length > 0 ? '' : 'No plan items loaded. Use the form above to add items.';
@@ -961,11 +1060,10 @@
             const deliverablesLoadingText = document.getElementById('loadingDisplayDeliverables');
              if(deliverablesLoadingText) deliverablesLoadingText.textContent = funderDeliverablesData.length > 0 ? '' : 'No funder deliverables loaded. Use the form above to add items.';
 
-
             renderStrategicPlan(); 
             renderObjectiveLegend(planObjectiveLegendElement);
             renderFunderDeliverables();
-            updateSummaryMetrics();
+            updateSummaryMetrics(); // Call this after all data is loaded and initial renders are done.
             switchView('plan'); 
         });
     </script>
