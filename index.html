@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Annual Plan Dashboard - Full Data & Gantt</title>
+    <title>Annual Plan Dashboard - Enhanced Gantt Interaction</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
     <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
@@ -36,16 +36,19 @@
 
         .priority-group { margin-bottom: 2.5rem; }
         .priority-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1rem; padding: 1rem; background-color: #e5e7eb; border-radius: 0.5rem; }
-        .objective-group { margin-left: 1.5rem; margin-bottom: 1.5rem; padding: 1.5rem; background-color: #f9fafb; border-radius: 0.5rem; border-left-width: 4px; /* For objective color in plan view */ }
+        .objective-group { margin-left: 1.5rem; margin-bottom: 1.5rem; padding: 1.5rem; background-color: #f9fafb; border-radius: 0.5rem; border-left-width: 4px; }
         .objective-title { font-size: 1.125rem; font-weight: 600; color: #1f2937; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #d1d5db; }
         
         .strategy-card { background-color: #ffffff; }
 
         .gantt-container .grid-background { fill: #f9fafb; } .gantt-container .grid-header { fill: #f3f4f6; }
         .gantt-container .grid-row { fill: #ffffff; } .gantt-container .grid-row:nth-child(even) { fill: #f9fafb; }
-        .gantt-container .bar-label { fill: #374151; font-size: 12px; } 
+        .gantt-container .bar-label { fill: #374151; font-size: 12px; cursor: default; } 
+        .gantt-container .bar-label.objective-task-label { font-weight: bold; cursor: pointer !important; } 
         .gantt-container .bar-progress { fill-opacity: 0.7; } 
         .gantt-container .bar-wrapper .bar { fill-opacity: 0.3; stroke-width: 0; }
+        /* Add cursor pointer to objective bars themselves */
+        .gantt-container .objective-task-label .bar { cursor: pointer !important; }
         .gantt-container .handle { fill: #e5e7eb; stroke: #9ca3af; }
         .view-hidden { display: none !important; }
 
@@ -123,7 +126,7 @@
 
         <section id="gantt-view" class="view-section view-hidden bg-white p-6 rounded-lg shadow-lg">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Gantt Chart View</h2>
-            <p class="text-sm text-gray-500 mb-4">Visual timeline of your plan items, color-coded by Objective. Items must have a timeline (quarter) assigned.</p>
+            <p class="text-sm text-gray-500 mb-4">Visual timeline of your plan items, color-coded by Objective. Click on an Objective bar to expand/collapse its strategies. Items must have a timeline (quarter) assigned.</p>
             <div id="ganttObjectiveLegendContainer" class="mb-4">
                  <h4 class="text-sm font-semibold text-gray-600 mb-2">Objective Legend (Gantt View):</h4>
                  <div id="ganttObjectiveLegend" class="flex flex-wrap gap-x-4 gap-y-2"></div>
@@ -143,7 +146,6 @@
     </footer>
 
     <script>
-        // --- Initial Pre-Populated Test Data (Restored and Comprehensive) ---
         let strategicPlanData = [
             { id: 'yr1_ci_obj1_act1', strategicPriority: 'Enhance Community Engagement & Impact (Year 1)', objective: 'Expand Program Reach & Accessibility', title: 'Launch Pilot Program in Underserved Area X', description: 'Conduct needs assessment, adapt program materials, and initiate pilot phase for 50 new beneficiaries.', status: 'On Track', progress: 25, timeline: 'Q1 2025', responsible: 'Program Team Lead' },
             { id: 'yr1_ci_obj1_act2', strategicPriority: 'Enhance Community Engagement & Impact (Year 1)', objective: 'Expand Program Reach & Accessibility', title: 'Develop Online Resource Portal', description: 'Create a web portal with accessible program information, resources, and application forms.', status: 'Not Started', progress: 0, timeline: 'Q2 2025', responsible: 'IT & Comms Team' },
@@ -163,29 +165,22 @@
         let ganttChart = null;
         let objectiveCounter = 0;
         let strategyCounter = 0;
-        let objectiveColors = {}; // Stores { objectiveTitle: 'hexColor' or 'tailwindClass' }
-        const predefinedColorClasses = [ // Tailwind border color classes for plan view, hex for Gantt
-            { planClass: 'border-red-500', ganttFill: '#EF4444' }, 
-            { planClass: 'border-orange-500', ganttFill: '#F97316' },
-            { planClass: 'border-amber-500', ganttFill: '#F59E0B' },
-            { planClass: 'border-yellow-500', ganttFill: '#EAB308' },
-            { planClass: 'border-lime-500', ganttFill: '#84CC16' },
-            { planClass: 'border-green-500', ganttFill: '#22C55E' },
-            { planClass: 'border-emerald-500', ganttFill: '#10B981' },
-            { planClass: 'border-teal-500', ganttFill: '#14B8A6' },
-            { planClass: 'border-cyan-500', ganttFill: '#06B6D4' },
-            { planClass: 'border-sky-500', ganttFill: '#0EA5E9' },
-            { planClass: 'border-blue-500', ganttFill: '#3B82F6' },
-            { planClass: 'border-indigo-500', ganttFill: '#6366F1' },
-            { planClass: 'border-violet-500', ganttFill: '#8B5CF6' },
-            { planClass: 'border-purple-500', ganttFill: '#A855F7' },
-            { planClass: 'border-fuchsia-500', ganttFill: '#D946EF' },
-            { planClass: 'border-pink-500', ganttFill: '#EC4899' },
+        let objectiveColors = {}; 
+        const predefinedColorClasses = [ 
+            { planClass: 'border-red-500', ganttFill: '#EF4444' }, { planClass: 'border-orange-500', ganttFill: '#F97316' },
+            { planClass: 'border-amber-500', ganttFill: '#F59E0B' }, { planClass: 'border-yellow-500', ganttFill: '#EAB308' },
+            { planClass: 'border-lime-500', ganttFill: '#84CC16' }, { planClass: 'border-green-500', ganttFill: '#22C55E' },
+            { planClass: 'border-emerald-500', ganttFill: '#10B981' }, { planClass: 'border-teal-500', ganttFill: '#14B8A6' },
+            { planClass: 'border-cyan-500', ganttFill: '#06B6D4' }, { planClass: 'border-sky-500', ganttFill: '#0EA5E9' },
+            { planClass: 'border-blue-500', ganttFill: '#3B82F6' }, { planClass: 'border-indigo-500', ganttFill: '#6366F1' },
+            { planClass: 'border-violet-500', ganttFill: '#8B5CF6' }, { planClass: 'border-purple-500', ganttFill: '#A855F7' },
+            { planClass: 'border-fuchsia-500', ganttFill: '#D946EF' }, { planClass: 'border-pink-500', ganttFill: '#EC4899' },
             { planClass: 'border-rose-500', ganttFill: '#F43F5E' }
         ];
         let colorIndex = 0;
+        let expandedObjectives = {}; 
 
-        // --- DOM Elements ---
+
         const planListContainerElement = document.getElementById('planListContainer');
         const addPlanFormElement = document.getElementById('addPlanForm');
         const objectivesContainerElement = document.getElementById('objectivesContainer');
@@ -207,7 +202,6 @@
         const planObjectiveLegendElement = document.getElementById('planObjectiveLegend');
         const ganttObjectiveLegendElement = document.getElementById('ganttObjectiveLegend');
 
-        // --- Utility Functions ---
         function displayMessage(element, message, type = 'info') {
             if (!element) return;
             element.textContent = message;
@@ -254,7 +248,7 @@
             const currentYr = new Date().getFullYear();
             const quarters = ["Q1", "Q2", "Q3", "Q4"];
             selectElement.innerHTML = '<option value="">Select Quarter</option>';
-            for (let i = 0; i < 3; i++) { // Current year + next 2 years
+            for (let i = 0; i < 3; i++) { 
                 const year = currentYr + i;
                 quarters.forEach(q => {
                     const option = document.createElement('option');
@@ -355,7 +349,7 @@
 
         function renderStrategicPlan() {
             planListContainerElement.innerHTML = '';
-            assignObjectiveColors(); // Assign colors based on current data
+            assignObjectiveColors(); 
             displayMessage(loadingDisplayPlanElement, strategicPlanData.length > 0 ? '' : 'No plan items loaded. Use the form above to add items.', strategicPlanData.length > 0 ? 'info' : 'loading');
 
             const groupedByPriority = strategicPlanData.reduce((acc, item) => {
@@ -379,10 +373,10 @@
 
                 for (const objectiveName in groupedByObjective) {
                     const objectiveItems = groupedByObjective[objectiveName];
-                    const objectiveColorInfo = objectiveColors[objectiveName] || { planClass: 'border-gray-300', ganttFill: '#D1D5DB' };
+                    const objectiveColorInfo = objectiveColors[objectiveName] || { planClass: 'border-gray-300' };
                     
                     const objectiveGroupDiv = document.createElement('div');
-                    objectiveGroupDiv.className = `objective-group ${objectiveColorInfo.planClass}`; // Apply border color for plan view
+                    objectiveGroupDiv.className = `objective-group ${objectiveColorInfo.planClass}`; 
                     objectiveGroupDiv.innerHTML = `<h3 class="objective-title">${objectiveName}</h3>`;
                     
                     const strategiesContainer = document.createElement('div');
@@ -431,20 +425,23 @@
             }
             for (const objectiveName in objectiveColors) {
                 const colorInfo = objectiveColors[objectiveName];
-                const swatchColor = legendElement.id === 'ganttObjectiveLegend' ? colorInfo.ganttFill : colorInfo.planClass.replace('border-', 'bg-').replace('-500', '-500'); // Use fill for Gantt, bg for plan
+                const swatchColor = legendElement.id === 'ganttObjectiveLegend' ? colorInfo.ganttFill : colorInfo.planClass;
                 
                 const legendItem = document.createElement('div');
                 legendItem.className = 'legend-item';
-                legendItem.innerHTML = `
-                    <span class="legend-color-swatch" style="background-color: ${legendElement.id === 'ganttObjectiveLegend' ? swatchColor : 'transparent'}; border-color: ${legendElement.id === 'ganttObjectiveLegend' ? swatchColor : 'transparent'}" ${legendElement.id === 'planObjectiveLegend' ? `class="legend-color-swatch ${swatchColor}"` : ''}></span>
-                    <span>${objectiveName}</span>
-                `;
-                 // For plan view, we use Tailwind bg class, for Gantt, direct style
-                if(legendElement.id === 'planObjectiveLegend') {
-                    legendItem.querySelector('.legend-color-swatch').className = `legend-color-swatch ${swatchColor.replace('border-','bg-')}`;
-                } else { // Gantt legend
-                     legendItem.querySelector('.legend-color-swatch').style.backgroundColor = swatchColor;
+                const swatchSpan = document.createElement('span');
+                swatchSpan.className = 'legend-color-swatch';
+
+                if (legendElement.id === 'ganttObjectiveLegend') {
+                    swatchSpan.style.backgroundColor = swatchColor;
+                } else { 
+                    swatchSpan.classList.add(swatchColor.replace('border-','bg-')); 
                 }
+                
+                legendItem.appendChild(swatchSpan);
+                const textSpan = document.createElement('span');
+                textSpan.textContent = objectiveName;
+                legendItem.appendChild(textSpan);
                 legendElement.appendChild(legendItem);
             }
         }
@@ -454,28 +451,59 @@
             ganttSvgElement.innerHTML = ''; 
             assignObjectiveColors(); 
 
-            const tasksForGantt = strategicPlanData.map(item => {
-                const dates = getDatesFromQuarter(item.timeline);
-                if (!dates.start || !dates.end) return null; 
+            let tasksForGantt = [];
+            const uniqueObjectives = [...new Set(strategicPlanData.map(item => item.objective).filter(Boolean))];
 
-                const objectiveColorInfo = objectiveColors[item.objective] || { ganttFill: '#D1D5DB' }; // Default gray
-                const objectiveColorClassName = `gantt-obj-color-${Object.keys(objectiveColors).indexOf(item.objective)}`;
+            uniqueObjectives.forEach(objName => {
+                const objectiveColorInfo = objectiveColors[objName] || { ganttFill: '#D1D5DB' }; 
+                const objectiveColorClassName = `gantt-obj-color-${Object.keys(objectiveColors).indexOf(objName)}`;
+                const isExpanded = expandedObjectives[objName] === true;
 
-                return {
-                    id: String(item.id), 
-                    name: `${item.title}`, 
-                    start: dates.start,
-                    end: dates.end,
-                    progress: item.progress,
-                    dependencies: '', 
-                    custom_class: objectiveColorClassName 
-                };
-            }).filter(task => task !== null); 
+                let objectiveYear = new Date().getFullYear(); 
+                const strategiesForObjective = strategicPlanData.filter(item => item.objective === objName && item.timeline);
+                if (strategiesForObjective.length > 0) {
+                    const years = strategiesForObjective.map(s => parseInt(s.timeline.split(' ')[1]));
+                    if (years.length > 0) objectiveYear = Math.min(...years); 
+                }
+                
+                tasksForGantt.push({
+                    id: `OBJECTIVE_${objName.replace(/\s+/g, '_')}`, 
+                    name: (isExpanded ? '▼ ' : '► ') + objName,
+                    start: `${objectiveYear}-01-01`,
+                    end: `${objectiveYear}-12-31`,
+                    progress: Math.round(strategiesForObjective.reduce((sum, s) => sum + s.progress, 0) / (strategiesForObjective.length || 1)),
+                    custom_class: `${objectiveColorClassName} objective-task-label`, 
+                    isObjective: true, 
+                    objectiveName: objName 
+                });
 
-            if (tasksForGantt.length === 0) {
-                displayMessage(ganttErrorDisplayElement, 'No plan items with valid timelines to display in Gantt chart. Add items with a quarter selected.', 'info');
-                renderObjectiveLegend(ganttObjectiveLegendElement);
-                return;
+                if (isExpanded) {
+                    strategiesForObjective.forEach(item => {
+                        const dates = getDatesFromQuarter(item.timeline);
+                        if (dates.start && dates.end) {
+                            tasksForGantt.push({
+                                id: String(item.id), 
+                                name: `    ${item.title}`, 
+                                start: dates.start,
+                                end: dates.end,
+                                progress: item.progress,
+                                dependencies: `OBJECTIVE_${objName.replace(/\s+/g, '_')}`, 
+                                custom_class: objectiveColorClassName 
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (tasksForGantt.length === 0 && strategicPlanData.some(item => item.timeline)) {
+                 displayMessage(ganttErrorDisplayElement, 'No objectives found to display in Gantt chart. Add items with objectives and timelines.', 'info');
+            } else if (!strategicPlanData.some(item => item.timeline)) {
+                 displayMessage(ganttErrorDisplayElement, 'No plan items with valid timelines to display in Gantt chart. Add items with a quarter selected.', 'info');
+            }
+
+            if (tasksForGantt.filter(t => !t.isObjective).length === 0 && tasksForGantt.filter(t => t.isObjective).length === 0) { 
+                 renderObjectiveLegend(ganttObjectiveLegendElement); 
+                 return;
             }
 
             const styleId = 'gantt-dynamic-objective-styles';
@@ -489,8 +517,12 @@
             Object.keys(objectiveColors).forEach((objective, index) => {
                 const colorHex = objectiveColors[objective].ganttFill;
                 const className = `gantt-obj-color-${index}`;
-                cssRules += `.gantt .${className} .bar { fill: ${colorHex} !important; fill-opacity: 0.3 !important; } `;
+                // Apply cursor pointer to the main bar of objectives for better UX
+                cssRules += `.gantt .${className}.objective-task-label .bar { cursor: pointer !important; fill: ${colorHex} !important; fill-opacity: 0.3 !important; } `;
                 cssRules += `.gantt .${className} .bar-progress { fill: ${colorHex} !important; fill-opacity: 0.7 !important; } `;
+                // For strategy bars under this objective, they just get the color, no special cursor needed on the bar itself.
+                cssRules += `.gantt .${className}:not(.objective-task-label) .bar { fill: ${colorHex} !important; fill-opacity: 0.3 !important; } `;
+
             });
             dynamicStyles.innerHTML = cssRules;
 
@@ -500,11 +532,25 @@
                     view_modes: ['Quarter Day', 'Week', 'Month', 'Year'], 
                     bar_height: 25, bar_corner_radius: 4, arrow_curve: 5, padding: 20,
                     view_mode: 'Month', date_format: 'YYYY-MM-DD', language: 'en', 
+                    on_click: function (task) {
+                        if (task.isObjective) { 
+                            expandedObjectives[task.objectiveName] = !expandedObjectives[task.objectiveName];
+                            renderGanttChart(); 
+                        }
+                    },
                     custom_popup_html: function(task) {
-                        const item = strategicPlanData.find(p => String(p.id) === task.id);
+                        const item = strategicPlanData.find(p => String(p.id) === task.id || `OBJECTIVE_${p.objective.replace(/\s+/g, '_')}` === task.id);
+                        if (task.isObjective) {
+                             return `
+                            <div class="gantt-popup-content p-3 shadow-xl rounded-md bg-white text-sm max-w-xs">
+                                <div class="font-bold text-gray-800 mb-1.5">${task.name.replace(/^[▼►]\s*/, '')}</div>
+                                <div class="text-xs text-gray-500">Progress: ${task.progress}%</div>
+                                <div class="text-xs text-gray-500 mt-1">Click to expand/collapse strategies.</div>
+                            </div>`;
+                        }
                         return `
                             <div class="gantt-popup-content p-3 shadow-xl rounded-md bg-white text-sm max-w-xs">
-                                <div class="font-bold text-gray-800 mb-1.5">${item ? item.title : task.name}</div>
+                                <div class="font-bold text-gray-800 mb-1.5">${item ? item.title : task.name.trim()}</div>
                                 ${item && item.strategicPriority ? `<div class="text-xs text-gray-600 mb-0.5"><span class="font-semibold">Priority:</span> ${item.strategicPriority}</div>` : ''}
                                 ${item && item.objective ? `<div class="text-xs text-gray-600 mb-1"><span class="font-semibold">Objective:</span> ${item.objective}</div>` : ''}
                                 <div class="text-xs text-gray-500">Timeline: ${item ? item.timeline : 'N/A'}</div>
@@ -551,7 +597,7 @@
             if (targetViewId === 'gantt') {
                 setTimeout(() => renderGanttChart(), 0); 
             } else if (targetViewId === 'plan') {
-                renderObjectiveLegend(planObjectiveLegendElement); // Update plan view legend
+                renderObjectiveLegend(planObjectiveLegendElement);
             }
         }
 
@@ -632,7 +678,7 @@
             renderStrategicPlan();
             renderObjectiveLegend(planObjectiveLegendElement);
             if (!document.getElementById('gantt-view').classList.contains('view-hidden')) {
-                renderGanttChart(); // This will also call renderGanttObjectiveLegend
+                renderGanttChart(); 
             }
             updateSummaryMetrics();
             addPlanFormElement.reset();
@@ -649,7 +695,7 @@
                 renderStrategicPlan();
                 renderObjectiveLegend(planObjectiveLegendElement); 
                  if (!document.getElementById('gantt-view').classList.contains('view-hidden')) {
-                    renderGanttChart(); // This will also call renderGanttObjectiveLegend
+                    renderGanttChart(); 
                 }
                 updateSummaryMetrics();
             }
