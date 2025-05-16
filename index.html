@@ -3,60 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Annual Plan Dashboard</title>
+    <title>Annual Plan Dashboard - Data & Functional Navigation</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-        }
-        /* Custom scrollbar for better aesthetics (optional) */
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-        /* Dynamically added by JS based on status */
+        .status-indicator { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         .status-on-track-dot { background-color: #22c55e; }
         .status-at-risk-dot { background-color: #facc15; }
         .status-off-track-dot { background-color: #ef4444; }
         .status-completed-dot { background-color: #3b82f6; }
         .status-not-started-dot { background-color: #9ca3af; }
 
-        .progress-bar-bg {
-            background-color: #e5e7eb; /* gray-200 */
-            border-radius: 0.375rem; /* rounded-md */
-            height: 1rem; /* h-4 */
-            overflow: hidden;
-        }
-        .progress-bar {
-            height: 100%;
-            transition: width 0.3s ease-in-out;
-            text-align: center;
-            color: white;
-            font-size: 0.75rem; /* text-xs */
-            line-height: 1rem; /* leading-4 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        /* Progress bar colors dynamically added by JS */
-         .progress-on-track { background-color: #22c55e; }
+        .progress-bar-bg { background-color: #e5e7eb; border-radius: 0.375rem; height: 1rem; overflow: hidden; }
+        .progress-bar { height: 100%; transition: width 0.3s ease-in-out; text-align: center; color: white; font-size: 0.75rem; line-height: 1rem; display: flex; align-items: center; justify-content: center; }
+        .progress-on-track { background-color: #22c55e; }
         .progress-at-risk { background-color: #facc15; }
         .progress-off-track { background-color: #ef4444; }
         .progress-completed { background-color: #3b82f6; }
         .progress-not-started { background-color: #9ca3af; }
 
-        .error-message { color: #ef4444; /* red-500 */ font-weight: bold; margin-top: 10px; }
-        .loading-message { color: #6b7280; /* gray-500 */ font-style: italic; margin-top: 10px; }
+        .error-message { color: #ef4444; font-weight: bold; margin-top: 10px; }
+        .info-message { color: #3b82f6; font-style: italic; margin-top: 10px; }
+        .loading-message { color: #6b7280; font-style: italic; margin-top: 10px; }
+
+        .priority-group { margin-bottom: 2.5rem; }
+        .priority-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1rem; padding: 1rem; background-color: #e5e7eb; border-radius: 0.5rem; }
+        .objective-group { margin-left: 1.5rem; margin-bottom: 1.5rem; padding: 1.5rem; background-color: #f9fafb; border-radius: 0.5rem; border: 1px solid #e5e7eb; }
+        .objective-title { font-size: 1.125rem; font-weight: 600; color: #1f2937; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #d1d5db; }
+        
+        .strategy-card { background-color: #ffffff; }
+
+        .gantt-container .grid-background { fill: #f9fafb; } .gantt-container .grid-header { fill: #f3f4f6; }
+        .gantt-container .grid-row { fill: #ffffff; } .gantt-container .grid-row:nth-child(even) { fill: #f9fafb; }
+        .gantt-container .bar-label { fill: #374151; font-size: 12px; } 
+        .gantt-container .bar-progress { fill-opacity: 0.7; }
+        .gantt-container .handle { fill: #e5e7eb; stroke: #9ca3af; }
+        .view-hidden { display: none !important; } /* Ensure override */
+
+        .form-section { border: 1px solid #e5e7eb; padding: 1rem; margin-bottom: 1rem; border-radius: 0.375rem; background-color: #f9fafb; }
+        .form-section-title { font-weight: 600; margin-bottom: 0.75rem; color: #374151; }
+        .input-group { margin-bottom: 0.75rem; }
+        .remove-btn { background-color: #fee2e2; color: #991b1b; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.25rem; }
+        .remove-btn:hover { background-color: #fecaca; }
+        .add-btn { background-color: #dbeafe; color: #1d4ed8; padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: 0.25rem; margin-top: 0.5rem; }
+        .add-btn:hover { background-color: #bfdbfe; }
+        
+        .view-switch-btn.active-view {
+            color: #2563eb; /* blue-600 */
+            border-bottom: 2px solid #2563eb;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="antialiased text-gray-800">
@@ -65,10 +69,11 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <h1 class="text-2xl font-bold text-gray-700">Annual Plan Dashboard</h1>
-                <nav class="space-x-4">
-                    <a href="#overview" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Overview</a>
-                    <a href="#strategic-goals" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Strategic Goals</a>
-                    <a href="#funder-deliverables" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Funder Deliverables</a>
+                <nav class="space-x-1">
+                    <button data-view="overview" class="view-switch-btn text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Overview</button>
+                    <button data-view="plan" class="view-switch-btn text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Strategic Plan</button>
+                    <button data-view="gantt" class="view-switch-btn text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Gantt Chart</button>
+                    <button data-view="deliverables" class="view-switch-btn text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Funder Deliverables</button>
                 </nav>
             </div>
         </div>
@@ -76,72 +81,52 @@
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
 
-        <section id="overview" class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">Overall Progress Summary</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-blue-50 p-4 rounded-lg shadow">
-                    <h3 class="text-sm font-medium text-blue-700">Strategic Goals On Track</h3>
-                    <p class="text-3xl font-bold text-blue-600" id="summaryGoalsOnTrack">--/--</p>
-                </div>
-                <div class="bg-green-50 p-4 rounded-lg shadow">
-                    <h3 class="text-sm font-medium text-green-700">Funder Deliverables Met</h3>
-                    <p class="text-3xl font-bold text-green-600" id="summaryDeliverablesMet">--/--</p>
-                </div>
-                <div class="bg-yellow-50 p-4 rounded-lg shadow">
-                    <h3 class="text-sm font-medium text-yellow-700">Items At Risk</h3>
-                    <p class="text-3xl font-bold text-yellow-600" id="summaryItemsAtRisk">--</p>
-                </div>
-                <div class="bg-red-50 p-4 rounded-lg shadow">
-                    <h3 class="text-sm font-medium text-red-700">Critical Issues (Off Track)</h3>
-                    <p class="text-3xl font-bold text-red-600" id="summaryCriticalIssues">--</p>
-                </div>
+        <section id="overview-view" class="view-section bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">Overall Progress Summary</h2>
+            <p class="text-sm text-gray-500 mb-4">Summary metrics are calculated from loaded plan items.</p>
+            <div id="scorecardSummaryContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                <div class="bg-blue-50 p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-blue-700">Plan Items On Track</h3><p class="text-3xl font-bold text-blue-600" id="summaryGoalsOnTrack">--/--</p></div>
+                <div class="bg-yellow-50 p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-yellow-700">Items At Risk</h3><p class="text-3xl font-bold text-yellow-600" id="summaryItemsAtRisk">--</p></div>
+                <div class="bg-red-50 p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-red-700">Critical Issues (Off Track)</h3><p class="text-3xl font-bold text-red-600" id="summaryCriticalIssues">--</p></div>
+                <div class="bg-green-50 p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-green-700">Items Completed</h3><p class="text-3xl font-bold text-green-600" id="summaryItemsCompleted">--</p></div>
             </div>
         </section>
 
-        <section id="add-goal-section" class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Strategic Goal</h2>
-            <form id="addGoalForm" class="space-y-4">
-                <div>
-                    <label for="goalTitle" class="block text-sm font-medium text-gray-700">Title</label>
-                    <input type="text" id="goalTitle" name="goalTitle" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <section id="plan-view" class="view-section space-y-8 view-hidden"> 
+            <div id="add-plan-item-section" class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Strategic Priority (In-Memory)</h2>
+                <form id="addPlanForm" class="space-y-4">
+                    <div class="input-group">
+                        <label for="strategicPriorityTitle" class="block text-sm font-medium text-gray-700">Strategic Priority Title:</label>
+                        <input type="text" id="strategicPriorityTitle" name="strategicPriorityTitle" required placeholder="E.g., Organizational Excellence" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    <div id="objectivesContainer" class="space-y-4"></div>
+                    <button type="button" id="addObjectiveBtn" class="add-btn">Add Objective (Max 3)</button>
+                    <hr class="my-6"><button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-medium text-sm leading-tight uppercase rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Add Entire Strategic Priority to Plan</button>
+                </form>
+            </div>
+
+            <div id="strategic-plan-list-section" class="p-0">
+                <div class="flex justify-between items-center mb-2 bg-white p-6 rounded-t-lg shadow-lg">
+                    <h2 class="text-xl font-semibold text-gray-700">Strategic Plan Details</h2>
                 </div>
-                <div>
-                    <label for="goalDescription" class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea id="goalDescription" name="goalDescription" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
-                </div>
-                <div>
-                    <label for="goalStatus" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="goalStatus" name="goalStatus" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option>Not Started</option>
-                        <option>On Track</option>
-                        <option>At Risk</option>
-                        <option>Off Track</option>
-                        <option>Completed</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="goalProgress" class="block text-sm font-medium text-gray-700">Progress (%)</label>
-                    <input type="number" id="goalProgress" name="goalProgress" value="0" min="0" max="100" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                </div>
-                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-medium text-sm leading-tight uppercase rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">
-                    Add Goal
-                </button>
-            </form>
+                <div id="errorDisplayPlan" class="error-message bg-white px-6"></div>
+                <div id="loadingDisplayPlan" class="loading-message bg-white px-6 pb-6">Loading plan items...</div>
+                <div id="planListContainer" class="space-y-0"></div>
+            </div>
         </section>
 
-        <section id="strategic-goals" class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold text-gray-700 mb-6">Current Strategic Goals</h2>
-            <div id="errorDisplay" class="error-message mb-4"></div>
-            <div id="loadingDisplay" class="loading-message mb-4">Loading goals...</div>
-            <div id="goalsListContainer" class="space-y-6">
-                </div>
+        <section id="gantt-view" class="view-section view-hidden bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Gantt Chart View</h2>
+            <p class="text-sm text-gray-500 mb-4">Visual timeline of your plan items. Items must have a timeline (quarter) assigned to appear here.</p>
+            <div id="ganttErrorDisplay" class="error-message"></div>
+            <div id="ganttChartContainer" class="gantt-container min-h-[400px]"><svg id="gantt"></svg></div>
         </section>
 
-        <section id="funder-deliverables" class="bg-white p-6 rounded-lg shadow-lg">
+        <section id="deliverables-view" class="view-section view-hidden bg-white p-6 rounded-lg shadow-lg">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Funder Deliverables</h2>
-            <p class="text-gray-600 italic">This section will display funder deliverables. Functionality can be added similar to Strategic Goals.</p>
-            </section>
-
+            <p class="text-gray-600 italic">This section is a placeholder.</p>
+        </section>
     </main>
 
     <footer class="bg-gray-800 text-white text-center p-4 mt-8">
@@ -149,240 +134,461 @@
     </footer>
 
     <script>
-        // --- Configuration ---
-        const API_BASE_URL = '/api'; // IMPORTANT: Change if your API is hosted elsewhere
+        // --- Initial Pre-Populated Test Data (Restored and Comprehensive) ---
+        let strategicPlanData = [
+            // Strategic Priority: Enhance Community Engagement & Impact (Year 1)
+            { id: 'yr1_ci_obj1_act1', strategicPriority: 'Enhance Community Engagement & Impact (Year 1)', objective: 'Expand Program Reach & Accessibility', title: 'Launch Pilot Program in Underserved Area X', description: 'Conduct needs assessment, adapt program materials, and initiate pilot phase for 50 new beneficiaries.', status: 'On Track', progress: 25, timeline: 'Q1 2025', responsible: 'Program Team Lead' },
+            { id: 'yr1_ci_obj1_act2', strategicPriority: 'Enhance Community Engagement & Impact (Year 1)', objective: 'Expand Program Reach & Accessibility', title: 'Develop Online Resource Portal', description: 'Create a web portal with accessible program information, resources, and application forms.', status: 'Not Started', progress: 0, timeline: 'Q2 2025', responsible: 'IT & Comms Team' },
+            { id: 'yr1_ci_obj1_act3', strategicPriority: 'Enhance Community Engagement & Impact (Year 1)', objective: 'Expand Program Reach & Accessibility', title: 'Establish 2 New Community Partnerships', description: 'Identify and formalize partnerships with local organizations to improve referral pathways.', status: 'At Risk', progress: 10, timeline: 'Q3 2025', responsible: 'Outreach Coordinator' },
+            { id: 'yr1_ci_obj2_act1', strategicPriority: 'Enhance Community Engagement & Impact (Year 1)', objective: 'Strengthen Volunteer Program', title: 'Recruit & Onboard 20 New Volunteers', description: 'Develop targeted recruitment campaign and streamline onboarding process.', status: 'On Track', progress: 60, timeline: 'Q1 2025', responsible: 'Volunteer Coordinator' },
+            { id: 'yr1_ci_obj2_act2', strategicPriority: 'Enhance Community Engagement & Impact (Year 1)', objective: 'Strengthen Volunteer Program', title: 'Implement Volunteer Recognition Program', description: 'Design and launch a program to acknowledge and appreciate volunteer contributions.', status: 'Completed', progress: 100, timeline: 'Q2 2025', responsible: 'Volunteer Coordinator' },
+
+            // Strategic Priority: Organizational Excellence & Sustainability (Year 1)
+            { id: 'yr1_oe_obj1_act1', strategicPriority: 'Organizational Excellence & Sustainability (Year 1)', objective: 'Improve Operational Efficiency', title: 'Implement Phase 1 of New CRM System', description: 'Core module setup, data migration planning for CRM.', status: 'On Track', progress: 40, timeline: 'Q3 2025', responsible: 'IT Manager, Ops Lead' },
+            { id: 'yr1_oe_obj1_act2', strategicPriority: 'Organizational Excellence & Sustainability (Year 1)', objective: 'Improve Operational Efficiency', title: 'Streamline Financial Reporting Processes', description: 'Review and optimize monthly and quarterly financial reporting procedures.', status: 'Completed', progress: 100, timeline: 'Q1 2025', responsible: 'Finance Director' },
+            { id: 'yr1_oe_obj2_act1', strategicPriority: 'Organizational Excellence & Sustainability (Year 1)', objective: 'Enhance Staff Development & Wellbeing', title: 'Conduct Annual Staff Satisfaction Survey', description: 'Administer survey, analyze results, and develop action plan.', status: 'Not Started', progress: 0, timeline: 'Q2 2025', responsible: 'HR Manager' },
+            { id: 'yr1_oe_obj2_act2', strategicPriority: 'Organizational Excellence & Sustainability (Year 1)', objective: 'Enhance Staff Development & Wellbeing', title: 'Launch Mentorship Program Pilot', description: 'Pair 5 senior and junior staff for initial pilot phase.', status: 'At Risk', progress: 5, timeline: 'Q4 2025', responsible: 'HR Manager' },
+            
+            // Strategic Priority: Innovation & Future Readiness (Year 1)
+            { id: 'yr1_ifr_obj1_act1', strategicPriority: 'Innovation & Future Readiness (Year 1)', objective: 'Explore New Programmatic Areas', title: 'Research Emerging Community Needs', description: 'Conduct environmental scan and stakeholder interviews to identify potential new service areas.', status: 'On Track', progress: 15, timeline: 'Q4 2025', responsible: 'Research Lead' },
+            
+            // Example data for Year 2 (to show multi-year on Gantt)
+            { id: 'yr2_ci_obj1_act1', strategicPriority: 'Enhance Community Engagement & Impact (Year 2)', objective: 'Expand Program Reach & Accessibility (Y2)', title: 'Scale Pilot Program in Area X', description: 'Expand successful pilot to 200 beneficiaries.', status: 'Not Started', progress: 0, timeline: 'Q1 2026', responsible: 'Program Team Lead' },
+            { id: 'yr2_oe_obj1_act1', strategicPriority: 'Organizational Excellence & Sustainability (Year 2)', objective: 'Improve Operational Efficiency (Y2)', title: 'CRM System Full Rollout & Training', description: 'Complete data migration and train all relevant staff.', status: 'Not Started', progress: 0, timeline: 'Q2 2026', responsible: 'IT Manager' },
+            { id: 'yr2_ifr_obj1_act1', strategicPriority: 'Innovation & Future Readiness (Year 2)', objective: 'Explore New Programmatic Areas (Y2)', title: 'Develop 1 Pilot Proposal for New Service', description: 'Based on Year 1 research, develop a detailed proposal for a new pilot initiative.', status: 'Not Started', progress: 0, timeline: 'Q2 2026', responsible: 'Program Development' }
+        ];
+
+        let ganttChart = null;
+        let objectiveCounter = 0;
+        let strategyCounter = 0;
 
         // --- DOM Elements ---
-        const goalsListContainerElement = document.getElementById('goalsListContainer');
-        const addGoalFormElement = document.getElementById('addGoalForm');
-        const errorDisplayElement = document.getElementById('errorDisplay');
-        const loadingDisplayElement = document.getElementById('loadingDisplay');
+        const planListContainerElement = document.getElementById('planListContainer');
+        const addPlanFormElement = document.getElementById('addPlanForm');
+        const objectivesContainerElement = document.getElementById('objectivesContainer');
+        const addObjectiveBtnElement = document.getElementById('addObjectiveBtn');
+        
+        const errorDisplayPlanElement = document.getElementById('errorDisplayPlan');
+        const loadingDisplayPlanElement = document.getElementById('loadingDisplayPlan');
         const currentYearElement = document.getElementById('currentYear');
-        // Summary metric elements (optional, can be made dynamic)
+        
         const summaryGoalsOnTrackEl = document.getElementById('summaryGoalsOnTrack');
-        // ... add other summary elements if you make them dynamic
+        const summaryItemsAtRiskEl = document.getElementById('summaryItemsAtRisk');
+        const summaryCriticalIssuesEl = document.getElementById('summaryCriticalIssues');
+        const summaryItemsCompletedEl = document.getElementById('summaryItemsCompleted');
+
+        const ganttSvgElement = document.getElementById('gantt');
+        const ganttErrorDisplayElement = document.getElementById('ganttErrorDisplay');
+        const viewSwitchButtons = document.querySelectorAll('.view-switch-btn');
+        const viewSections = document.querySelectorAll('.view-section');
 
         // --- Utility Functions ---
-        function displayError(message) {
-            errorDisplayElement.textContent = message;
-            if (message) loadingDisplayElement.textContent = '';
-        }
-
-        function displayLoading(isLoading, section = "goals") { // Default to goals section
-            const targetLoadingElement = section === "goals" ? loadingDisplayElement : null; // Extend for other sections
-            if (targetLoadingElement) {
-                targetLoadingElement.textContent = isLoading ? 'Processing...' : '';
-            }
-            if (isLoading) errorDisplayElement.textContent = '';
+        function displayMessage(element, message, type = 'info') {
+            if (!element) return;
+            element.textContent = message;
+            element.className = 'mt-2 text-sm '; 
+            if (type === 'error') element.classList.add('error-message');
+            else if (type === 'loading') element.classList.add('loading-message');
+            else element.classList.add('info-message');
+            element.style.display = message ? 'block' : 'none';
         }
         
-        function getStatusColorClasses(status) {
-            // Returns Tailwind classes for various parts based on status
-            switch (status) {
-                case 'On Track': return { 
-                    dot: 'status-on-track-dot', 
-                    textBg: 'bg-green-100 text-green-700', 
-                    progress: 'progress-on-track' 
-                };
-                case 'At Risk': return { 
-                    dot: 'status-at-risk-dot', 
-                    textBg: 'bg-yellow-100 text-yellow-700', 
-                    progress: 'progress-at-risk' 
-                };
-                case 'Off Track': return { 
-                    dot: 'status-off-track-dot', 
-                    textBg: 'bg-red-100 text-red-700', 
-                    progress: 'progress-off-track' 
-                };
-                case 'Completed': return { 
-                    dot: 'status-completed-dot', 
-                    textBg: 'bg-blue-100 text-blue-700', 
-                    progress: 'progress-completed' 
-                };
-                default: return { // Not Started or other
-                    dot: 'status-not-started-dot', 
-                    textBg: 'bg-gray-100 text-gray-700', 
-                    progress: 'progress-not-started' 
-                };
+        function getStatusColorClasses(statusString) {
+            const status = typeof statusString === 'string' ? statusString.toLowerCase().trim() : 'not started';
+            if (status.includes('on track')) return { dot: 'status-on-track-dot', textBg: 'bg-green-100 text-green-700', progress: 'progress-on-track', ganttBar: 'bar-on-track' };
+            if (status.includes('at risk') || status.includes('potential issue')) return { dot: 'status-at-risk-dot', textBg: 'bg-yellow-100 text-yellow-700', progress: 'progress-at-risk', ganttBar: 'bar-at-risk' };
+            if (status.includes('off track') || status.includes('behind') || status.includes('significant issue')) return { dot: 'status-off-track-dot', textBg: 'bg-red-100 text-red-700', progress: 'progress-off-track', ganttBar: 'bar-off-track' };
+            if (status.includes('completed') || status.includes('done') || status.includes('achieved')) return { dot: 'status-completed-dot', textBg: 'bg-blue-100 text-blue-700', progress: 'progress-completed', ganttBar: 'bar-completed' };
+            return { dot: 'status-not-started-dot', textBg: 'bg-gray-100 text-gray-700', progress: 'progress-not-started', ganttBar: 'bar-not-started' };
+        }
+        
+        function getDatesFromQuarter(quarterString) {
+            if (!quarterString || !quarterString.includes('Q') || !quarterString.includes(' ')) {
+                return { start: null, end: null };
             }
+            const parts = quarterString.split(' ');
+            const quarter = parseInt(parts[0].substring(1));
+            const year = parseInt(parts[1]);
+
+            if (isNaN(quarter) || isNaN(year) || quarter < 1 || quarter > 4) {
+                 return { start: null, end: null };
+            }
+
+            let startDate, endDate;
+            switch (quarter) {
+                case 1: startDate = `${year}-01-01`; endDate = `${year}-03-31`; break;
+                case 2: startDate = `${year}-04-01`; endDate = `${year}-06-30`; break;
+                case 3: startDate = `${year}-07-01`; endDate = `${year}-09-30`; break;
+                case 4: startDate = `${year}-10-01`; endDate = `${year}-12-31`; break;
+                default: return { start: null, end: null };
+            }
+            return { start: startDate, end: endDate };
         }
 
-
-        // --- API Call Functions ---
-        async function getAllGoals() {
-            displayLoading(true, "goals");
-            try {
-                const response = await fetch(`${API_BASE_URL}/goals`);
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ message: `Server error: ${response.statusText}` }));
-                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.message || response.statusText}`);
-                }
-                const goals = await response.json();
-                displayLoading(false, "goals");
-                return goals;
-            } catch (error) {
-                console.error('Failed to fetch goals:', error);
-                displayError(`Error fetching goals: ${error.message}`);
-                displayLoading(false, "goals");
-                return [];
-            }
-        }
-
-        async function addNewGoal(goalData) {
-            displayLoading(true, "goals");
-            try {
-                const response = await fetch(`${API_BASE_URL}/goals`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(goalData),
+        function populateTimelineDropdown(selectElement) {
+            const currentYr = new Date().getFullYear();
+            const quarters = ["Q1", "Q2", "Q3", "Q4"];
+            selectElement.innerHTML = '<option value="">Select Quarter</option>';
+            for (let i = 0; i < 3; i++) { // Current year + next 2 years
+                const year = currentYr + i;
+                quarters.forEach(q => {
+                    const option = document.createElement('option');
+                    option.value = `${q} ${year}`;
+                    option.textContent = `${q} ${year}`;
+                    selectElement.appendChild(option);
                 });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ message: `Server error: ${response.statusText}` }));
-                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.message || response.statusText}`);
-                }
-                const savedGoal = await response.json();
-                displayLoading(false, "goals");
-                return savedGoal;
-            } catch (error) {
-                console.error('Failed to add new goal:', error);
-                displayError(`Error adding goal: ${error.message}`);
-                displayLoading(false, "goals");
-                return null;
             }
         }
 
-        async function deleteGoalById(goalId) {
-            if (!confirm(`Are you sure you want to delete this strategic goal?`)) {
-                return false;
-            }
-            displayLoading(true, "goals");
-            try {
-                const response = await fetch(`${API_BASE_URL}/goals/${goalId}`, {
-                    method: 'DELETE',
-                });
-                if (!response.ok) {
-                    let errorMessage = `Server error: ${response.statusText}`;
-                    try { const errorData = await response.json(); errorMessage = errorData.message || errorMessage; }
-                    catch (e) { /* Ignore if response body is not JSON */ }
-                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
-                }
-                displayLoading(false, "goals");
-                return true;
-            } catch (error) {
-                console.error(`Failed to delete goal ${goalId}:`, error);
-                displayError(`Error deleting goal: ${error.message}`);
-                displayLoading(false, "goals");
-                return false;
-            }
+        function createStrategyElement(objectiveIndex) {
+            strategyCounter++;
+            const strategyDiv = document.createElement('div');
+            strategyDiv.className = 'form-section ml-4';
+            strategyDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <p class="form-section-title">Strategy/Key Activity</p>
+                    <button type="button" class="remove-btn remove-strategy-btn">Remove Strategy</button>
+                </div>
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700">Strategy/Activity Title:</label>
+                    <input type="text" name="strategyTitle_${objectiveIndex}_${strategyCounter}" required placeholder="E.g., Develop marketing materials" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                </div>
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700">Description:</label>
+                    <textarea name="strategyDescription_${objectiveIndex}_${strategyCounter}" rows="2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-gray-700">Status:</label>
+                        <select name="strategyStatus_${objectiveIndex}_${strategyCounter}" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm text-sm">
+                            <option>Not Started</option><option>On Track</option><option>At Risk</option><option>Off Track</option><option>Completed</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-gray-700">Progress (%):</label>
+                        <input type="number" name="strategyProgress_${objectiveIndex}_${strategyCounter}" value="0" min="0" max="100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                    </div>
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-gray-700">Timeline (Quarter):</label>
+                        <select name="strategyTimeline_${objectiveIndex}_${strategyCounter}" class="strategy-timeline-select mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm text-sm"></select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700">Responsible:</label>
+                    <input type="text" name="strategyResponsible_${objectiveIndex}_${strategyCounter}" placeholder="E.g., Marketing Team" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                </div>
+            `;
+            populateTimelineDropdown(strategyDiv.querySelector('.strategy-timeline-select'));
+            strategyDiv.querySelector('.remove-strategy-btn').addEventListener('click', () => strategyDiv.remove());
+            return strategyDiv;
         }
 
-        // --- UI Rendering Functions ---
-        function renderGoals(goals) {
-            goalsListContainerElement.innerHTML = ''; // Clear existing goals
-             // Hide loading message once rendering starts (or if no goals)
-            if (loadingDisplayElement) loadingDisplayElement.textContent = '';
+        function createObjectiveElement() {
+            objectiveCounter++;
+            const objectiveDiv = document.createElement('div');
+            objectiveDiv.className = 'form-section';
+            objectiveDiv.dataset.objectiveIndex = objectiveCounter; 
+            objectiveDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <h4 class="form-section-title">Objective</h4>
+                    <button type="button" class="remove-btn remove-objective-btn">Remove Objective</button>
+                </div>
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700">Objective Title:</label>
+                    <input type="text" name="objectiveTitle_${objectiveCounter}" required placeholder="E.g., Increase Volunteer Participation" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                </div>
+                <div class="strategies-container space-y-3 mt-3"></div>
+                <button type="button" class="add-btn add-strategy-btn">Add Strategy/Activity (Max 3)</button>
+            `;
+            
+            const strategiesContainer = objectiveDiv.querySelector('.strategies-container');
+            const addStrategyBtn = objectiveDiv.querySelector('.add-strategy-btn');
 
+            addStrategyBtn.addEventListener('click', () => {
+                if (strategiesContainer.children.length < 3) {
+                    strategiesContainer.appendChild(createStrategyElement(objectiveCounter));
+                } else {
+                    alert('Maximum of 3 strategies/activities per objective.');
+                }
+            });
+            objectiveDiv.querySelector('.remove-objective-btn').addEventListener('click', () => objectiveDiv.remove());
+            strategiesContainer.appendChild(createStrategyElement(objectiveCounter)); 
+            return objectiveDiv;
+        }
+        
+        function renderStrategicPlan() {
+            planListContainerElement.innerHTML = '';
+            displayMessage(loadingDisplayPlanElement, strategicPlanData.length > 0 ? '' : 'No plan items loaded. Use the form above to add items.', strategicPlanData.length > 0 ? 'info' : 'loading');
 
-            if (!goals || goals.length === 0) {
-                goalsListContainerElement.innerHTML = '<p class="text-gray-500 italic">No strategic goals found. Add one using the form above.</p>';
+            const groupedByPriority = strategicPlanData.reduce((acc, item) => {
+                const priority = item.strategicPriority || 'Uncategorized Priorities';
+                if (!acc[priority]) acc[priority] = [];
+                acc[priority].push(item);
+                return acc;
+            }, {});
+
+            for (const priorityName in groupedByPriority) {
+                const priorityDiv = document.createElement('div');
+                priorityDiv.className = 'priority-group';
+                priorityDiv.innerHTML = `<h2 class="priority-title">${priorityName}</h2>`;
+                
+                const groupedByObjective = groupedByPriority[priorityName].reduce((acc, item) => {
+                    const objective = item.objective || 'General Activities';
+                    if (!acc[objective]) acc[objective] = [];
+                    acc[objective].push(item);
+                    return acc;
+                }, {});
+
+                for (const objectiveName in groupedByObjective) {
+                    const objectiveItems = groupedByObjective[objectiveName];
+                    
+                    const objectiveGroupDiv = document.createElement('div');
+                    objectiveGroupDiv.className = `objective-group border-gray-300`; // Standard border
+                    objectiveGroupDiv.innerHTML = `<h3 class="objective-title">${objectiveName}</h3>`;
+                    
+                    const strategiesContainer = document.createElement('div');
+                    strategiesContainer.className = 'space-y-6';
+
+                    objectiveItems.forEach(item => {
+                        const colorInfo = getStatusColorClasses(item.status);
+                        const itemCardHTML = `
+                            <div class="strategy-card bg-white p-5 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="text-md font-semibold text-gray-800">${item.title}</h4>
+                                    <span class="flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full ${colorInfo.textBg}">
+                                        <span class="status-indicator ${colorInfo.dot} mr-1.5"></span>
+                                        ${item.status}
+                                    </span>
+                                </div>
+                                ${item.description ? `<p class="text-sm text-gray-600 mb-1"><strong>Details:</strong> ${item.description}</p>` : ''}
+                                ${item.responsible ? `<p class="text-sm text-gray-500 mb-1"><strong>Responsible:</strong> ${item.responsible}</p>` : ''}
+                                ${item.timeline ? `<p class="text-sm text-gray-500 mb-3"><strong>Timeline:</strong> ${item.timeline}</p>` : '<div class="mb-3"></div>'}
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1"><span>Progress</span><span>${item.progress}%</span></div>
+                                    <div class="progress-bar-bg"><div class="progress-bar ${colorInfo.progress}" style="width: ${item.progress}%;">${item.progress > 10 ? item.progress + '%' : ''}</div></div>
+                                </div>
+                                <div class="mt-4 flex space-x-2 justify-end">
+                                    <button class="delete-item-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-1 px-3 rounded-md transition" data-id="${item.id}">Delete</button>
+                                </div>
+                            </div>`;
+                        strategiesContainer.innerHTML += itemCardHTML;
+                    });
+                    objectiveGroupDiv.appendChild(strategiesContainer);
+                    priorityDiv.appendChild(objectiveGroupDiv);
+                }
+                planListContainerElement.appendChild(priorityDiv);
+            }
+
+            document.querySelectorAll('.delete-item-btn').forEach(button => {
+                button.addEventListener('click', (event) => deletePlanItemFromMemory(event.target.dataset.id));
+            });
+        }
+        
+        function renderGanttChart() {
+            displayMessage(ganttErrorDisplayElement, '', 'info'); 
+            ganttSvgElement.innerHTML = ''; 
+
+            const tasksForGantt = strategicPlanData.map(item => {
+                const dates = getDatesFromQuarter(item.timeline);
+                if (!dates.start || !dates.end) return null; 
+
+                const colorInfo = getStatusColorClasses(item.status);
+                return {
+                    id: String(item.id), 
+                    name: `${item.title} (${item.objective.substring(0,20)}...)`, // Shorten objective for Gantt label
+                    start: dates.start,
+                    end: dates.end,
+                    progress: item.progress,
+                    dependencies: '', 
+                    custom_class: colorInfo.ganttBar 
+                };
+            }).filter(task => task !== null); 
+
+            if (tasksForGantt.length === 0) {
+                displayMessage(ganttErrorDisplayElement, 'No plan items with valid timelines to display in Gantt chart. Add items with a quarter selected.', 'info');
                 return;
             }
 
-            goals.forEach(goal => {
-                const colorInfo = getStatusColorClasses(goal.status || "Not Started");
-                const goalCardHTML = `
-                    <div class="bg-gray-50 p-5 rounded-lg shadow-md border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                        <div class="flex justify-between items-start mb-3">
-                            <h3 class="text-lg font-semibold text-gray-800">${goal.title || 'No Title'}</h3>
-                            <span class="flex items-center text-sm font-medium px-3 py-1 rounded-full ${colorInfo.textBg}">
-                                <span class="status-indicator ${colorInfo.dot} mr-1.5"></span>
-                                ${goal.status || 'N/A'}
-                            </span>
-                        </div>
-                        <p class="text-sm text-gray-600 mb-3">${goal.description || 'No description.'}</p>
-                        <div class="mb-3">
-                            <div class="flex justify-between text-sm text-gray-500 mb-1">
-                                <span>Progress</span>
-                                <span>${goal.progress || 0}%</span>
-                            </div>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar ${colorInfo.progress}" style="width: ${goal.progress || 0}%;">${(goal.progress || 0) > 10 ? (goal.progress || 0) + '%' : ''}</div>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex space-x-2 justify-end">
-                            <button class="delete-goal-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-1 px-3 rounded-md transition" data-id="${goal.id}">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                `;
-                goalsListContainerElement.innerHTML += goalCardHTML;
-            });
+            try {
+                const styleId = 'gantt-custom-bar-styles';
+                if (!document.getElementById(styleId)) {
+                    const style = document.createElement('style');
+                    style.id = styleId;
+                    style.innerHTML = `
+                        .gantt .bar-on-track .bar { fill: #22c55e !important; }
+                        .gantt .bar-at-risk .bar { fill: #facc15 !important; }
+                        .gantt .bar-off-track .bar { fill: #ef4444 !important; }
+                        .gantt .bar-completed .bar { fill: #3b82f6 !important; }
+                        .gantt .bar-not-started .bar { fill: #9ca3af !important; }
+                        .gantt .bar-progress { fill-opacity: 0.6 !important; }
+                    `;
+                    document.head.appendChild(style);
+                }
 
-            // Add event listeners to the new delete buttons
-            document.querySelectorAll('.delete-goal-btn').forEach(button => {
-                button.addEventListener('click', async (event) => {
-                    const goalId = event.target.dataset.id;
-                    const success = await deleteGoalById(goalId);
-                    if (success) {
-                        loadAndRenderGoals(); // Refresh the list
+                ganttChart = new Gantt("#gantt", tasksForGantt, {
+                    header_height: 60, column_width: 30, step: 24,
+                    view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'], // Added Quarter Day and Half Day
+                    bar_height: 25, bar_corner_radius: 4, arrow_curve: 5, padding: 20,
+                    view_mode: 'Month', date_format: 'YYYY-MM-DD', language: 'en', 
+                    custom_popup_html: function(task) {
+                        const item = strategicPlanData.find(p => String(p.id) === task.id);
+                        return `
+                            <div class="gantt-popup-content p-3 shadow-xl rounded-md bg-white text-sm max-w-xs">
+                                <div class="font-bold text-gray-800 mb-1.5">${item ? item.title : task.name}</div>
+                                ${item && item.strategicPriority ? `<div class="text-xs text-gray-600 mb-0.5"><span class="font-semibold">Priority:</span> ${item.strategicPriority}</div>` : ''}
+                                ${item && item.objective ? `<div class="text-xs text-gray-600 mb-1"><span class="font-semibold">Objective:</span> ${item.objective}</div>` : ''}
+                                <div class="text-xs text-gray-500">Timeline: ${item ? item.timeline : 'N/A'}</div>
+                                <div class="text-xs text-gray-500">Status: ${item ? item.status : 'N/A'}</div>
+                                <div class="text-xs text-gray-500">Progress: ${task.progress}%</div>
+                                ${item && item.responsible ? `<div class="text-xs text-gray-500">Responsible: ${item.responsible}</div>` : ''}
+                            </div>`;
                     }
                 });
-            });
+            } catch (e) {
+                console.error("Error initializing Gantt chart:", e);
+                displayMessage(ganttErrorDisplayElement, `Error creating Gantt chart: ${e.message}`, 'error');
+            }
         }
         
-        // --- Update Summary Metrics (Placeholder - make dynamic if API supports) ---
-        function updateSummaryMetrics(goals, deliverables) {
-            // This is a placeholder. For dynamic updates, you'd need to fetch summary data
-            // or calculate it from the full 'goals' and 'deliverables' arrays.
-            // For now, we'll just show how it *could* be updated if we had the data.
-            if (goals && summaryGoalsOnTrackEl) {
-                 const goalsOnTrackCount = goals.filter(g => g.status === 'On Track').length;
-                 summaryGoalsOnTrackEl.textContent = `${goalsOnTrackCount}/${goals.length}`;
-            }
-             // Similar logic for other summary items if data is available
+        function updateSummaryMetrics() {
+            const onTrackCount = strategicPlanData.filter(g => (g.status || '').toLowerCase().includes('on track')).length;
+            const atRiskCount = strategicPlanData.filter(g => (g.status || '').toLowerCase().includes('at risk')).length;
+            const offTrackCount = strategicPlanData.filter(g => (g.status || '').toLowerCase().includes('off track')).length;
+            const completedCount = strategicPlanData.filter(g => (g.status || '').toLowerCase().includes('completed')).length;
+
+            summaryGoalsOnTrackEl.textContent = `${onTrackCount}/${strategicPlanData.length || 0}`;
+            summaryItemsAtRiskEl.textContent = `${atRiskCount}`;
+            summaryCriticalIssuesEl.textContent = `${offTrackCount}`;
+            summaryItemsCompletedEl.textContent = `${completedCount}`;
         }
 
+        function switchView(targetViewId) {
+            viewSections.forEach(section => {
+                if (section.id === targetViewId + '-view') {
+                    section.classList.remove('view-hidden');
+                } else {
+                    section.classList.add('view-hidden');
+                }
+            });
 
-        // --- Event Handlers ---
-        addGoalFormElement.addEventListener('submit', async (event) => {
+            viewSwitchButtons.forEach(button => {
+                if (button.dataset.view === targetViewId) {
+                    button.classList.add('active-view');
+                } else {
+                    button.classList.remove('active-view');
+                }
+            });
+
+            if (targetViewId === 'gantt') {
+                // Ensure Gantt chart is rendered or refreshed when its view is activated
+                // A slight delay can sometimes help if the container wasn't fully visible/sized immediately
+                setTimeout(() => renderGanttChart(), 0); 
+            }
+        }
+
+        viewSwitchButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const viewId = event.currentTarget.dataset.view;
+                switchView(viewId);
+            });
+        });
+        
+        addPlanFormElement.addEventListener('submit', (event) => {
             event.preventDefault();
-            displayError('');
+            displayMessage(errorDisplayPlanElement, '', 'info');
+            const strategicPriorityTitle = document.getElementById('strategicPriorityTitle').value.trim();
 
-            const title = document.getElementById('goalTitle').value;
-            const description = document.getElementById('goalDescription').value;
-            const status = document.getElementById('goalStatus').value;
-            const progress = parseInt(document.getElementById('goalProgress').value);
-
-            if (!title.trim()) { // Simplified validation
-                displayError('Title is required.');
+            if (!strategicPriorityTitle) {
+                displayMessage(errorDisplayPlanElement, 'Strategic Priority Title is required.', 'error');
                 return;
             }
 
-            const newGoalData = { title, description, status, progress };
-            const savedGoal = await addNewGoal(newGoalData);
-
-            if (savedGoal) {
-                addGoalFormElement.reset();
-                loadAndRenderGoals();
+            const objectiveElements = objectivesContainerElement.querySelectorAll('.form-section');
+            if (objectiveElements.length === 0) {
+                displayMessage(errorDisplayPlanElement, 'Please add at least one objective for the priority.', 'error');
+                return;
             }
+            
+            let allValid = true;
+            objectiveElements.forEach((objEl, objIndexOuter) => {
+                if (!allValid) return; 
+                const currentObjectiveIndex = objEl.dataset.objectiveIndex; 
+                const objectiveTitleInput = objEl.querySelector(`input[name="objectiveTitle_${currentObjectiveIndex}"]`);
+                const objectiveTitle = objectiveTitleInput ? objectiveTitleInput.value.trim() : '';
+
+                if (!objectiveTitle) {
+                     displayMessage(errorDisplayPlanElement, `Title for an Objective is required.`, 'error');
+                     allValid = false; return;
+                }
+
+                const strategyElements = objEl.querySelectorAll('.form-section.ml-4');
+                if (strategyElements.length === 0) {
+                    displayMessage(errorDisplayPlanElement, `Please add at least one strategy for Objective: ${objectiveTitle}.`, 'error');
+                    allValid = false; return;
+                }
+                
+                strategyElements.forEach((stratEl, stratIndex) => {
+                    if (!allValid) return;
+                    const strategyTitleInput = stratEl.querySelector(`input[name^="strategyTitle_${currentObjectiveIndex}_"]`);
+                    const strategyTitle = strategyTitleInput ? strategyTitleInput.value.trim() : '';
+
+                    if (!strategyTitle) {
+                        displayMessage(errorDisplayPlanElement, `Title for a Strategy under Objective: ${objectiveTitle} is required.`, 'error');
+                        allValid = false; return;
+                    }
+
+                    const newItem = {
+                        id: `manual-item-${Date.now()}-${objIndexOuter}-${stratIndex}`,
+                        strategicPriority: strategicPriorityTitle,
+                        objective: objectiveTitle,
+                        title: strategyTitle,
+                        description: stratEl.querySelector(`textarea[name^="strategyDescription_${currentObjectiveIndex}_"]`).value.trim(),
+                        status: stratEl.querySelector(`select[name^="strategyStatus_${currentObjectiveIndex}_"]`).value,
+                        progress: parseInt(stratEl.querySelector(`input[name^="strategyProgress_${currentObjectiveIndex}_"]`).value) || 0,
+                        timeline: stratEl.querySelector(`select[name^="strategyTimeline_${currentObjectiveIndex}_"]`).value,
+                        responsible: stratEl.querySelector(`input[name^="strategyResponsible_${currentObjectiveIndex}_"]`).value.trim()
+                    };
+                    strategicPlanData.push(newItem); // Add item to global data
+                });
+            });
+
+            if (!allValid) return; 
+
+            renderStrategicPlan();
+            if (!document.getElementById('gantt-view').classList.contains('view-hidden')) {
+                renderGanttChart();
+            }
+            updateSummaryMetrics();
+            addPlanFormElement.reset();
+            objectivesContainerElement.innerHTML = ''; 
+            objectiveCounter = 0; 
+            strategyCounter = 0; 
+            objectivesContainerElement.appendChild(createObjectiveElement());
+            displayMessage(loadingDisplayPlanElement, 'Strategic Priority and its items added to current session.', 'info');
         });
 
-        // --- Initial Load ---
-        async function loadAndRenderGoals() {
-            displayLoading(true, "goals"); // Show loading message for goals section
-            const goals = await getAllGoals();
-            renderGoals(goals);
-            updateSummaryMetrics(goals, []); // Pass empty deliverables for now
-            displayLoading(false, "goals"); // Hide loading message
+        function deletePlanItemFromMemory(itemId) {
+            if (confirm(`Are you sure you want to delete this item from the current view? This change is temporary.`)) {
+                strategicPlanData = strategicPlanData.filter(item => item.id !== itemId);
+                renderStrategicPlan();
+                 if (!document.getElementById('gantt-view').classList.contains('view-hidden')) {
+                    renderGanttChart(); 
+                }
+                updateSummaryMetrics();
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             if(currentYearElement) currentYearElement.textContent = new Date().getFullYear();
-            loadAndRenderGoals();
-        });
+            objectivesContainerElement.appendChild(createObjectiveElement()); 
 
+            const planViewLoadingText = document.getElementById('loadingDisplayPlan');
+            if(planViewLoadingText) planViewLoadingText.textContent = strategicPlanData.length > 0 ? '' : 'No plan items loaded. Use the form above to add items.';
+
+            renderStrategicPlan(); 
+            updateSummaryMetrics();
+            switchView('plan'); 
+        });
     </script>
 </body>
 </html>
-
